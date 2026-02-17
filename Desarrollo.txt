@@ -1,0 +1,94 @@
+Gestor de tareas
+
+Tareas: 
+-Crear tareas
+-Listar tareas
+-Actualizar nombre de una tarea
+-Borrar
+
+Usar API con host: https://jsonplaceholder.typicode.com/todos
+
+
+=== PARTE 1: COMPRENDIENDO ANTES DE PROGRAMAR ===
+
+1. ¿Qué método HTTP usarían para:
+• Crear una tarea : POST
+• Listar tareas: GET
+• Actualizar una tarea: PUT o PATCH
+• Eliminar una tarea: DELETE
+
+2. ¿Qué información necesitarían enviar al servidor para actualizar o eliminar una
+tarea? 
+El identificador de la tarea, junto al metodo; 
+Si se busca borrar, el metodo corresponde a DELETE y no es necesario estructurar el header
+o el body del HTTP.
+En cambio, si se realiza una actualizacion, despues de identificar la tarea, se estructura 
+el HTTP conformado por el metodo, header y body.
+
+3. ¿En qué momento debe actualizarse el DOM?
+Despues de recibir respuesta del servidor, con estos datos se actualiza la 
+informacion del DOM.
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+=== PARTE 2: INPLEMENTACION GUIADA ===
+
+2. ¿En qué momento se transforman los datos JSON en elementos HTML?
+Una vez ya tenemos respuesta del servidor, lo agregamos directamente al cuerpo 
+del HTML con el uso del DOM con javaScript.
+
+3. ¿Qué ocurre primero: se actualiza el DOM o se envía la solicitud al servidor?
+Primero se envia la solicitud al servidor, ya que sin una informacion de retorno la
+cual nos va a brindar esta misma, no podriamos actualizar el DOM.
+
+4. ¿Por qué es importante el id en esta operación?
+Para reconocer el elemento exacto que se desea eliminar.
+
+5. ¿Qué diferencia existe entre modificar un dato en el DOM y modificarlo en el servidor?
+La mayor diferencia se encuentra en el sitio el cual se ve reflejado el cambio.
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+1. ¿Qué operación les resultó más sencilla?
+
+
+2. ¿Cuál fue la más compleja y por qué?
+
+3. ¿En qué parte del ciclo sintieron mayor dificultad: en la comunicación con la API o
+en la manipulación del DOM?
+
+
+
+
+
+
+
+
+
+
+=== ESTRUCTURA === 
+
+
+
+
+1. Estructura HTML mínima
+
+**form que contenga 2 input, texttarea y un boton
+input para nombre y textarea
+
+** Lista en la cual se mostraran las tareas 
+
+con boton de editar y eliminar 
+
+
+2. Listar tareas (READ)
+** Al cargar la pagina => Peticion GET 
+
+Fin: Mostrar en la lista como minimo 5 tareas
+
+
+al añadir la tarea, mostrarla en la lista
+
+se muestra en lista cuando crea, actualiza o borrar
+
+** ACTUALIZA SOLO EL NOMBRE y DESCIRP
