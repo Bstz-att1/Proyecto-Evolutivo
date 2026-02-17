@@ -96,6 +96,7 @@ se muestra en lista cuando crea, actualiza o borrar
 
 DAN: 
 - Front
+- GET
 - POST
 - DELETE
 
