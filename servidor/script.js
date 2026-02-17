@@ -1,7 +1,8 @@
 import {
     taskPost,
     taskGet,
-    renderTasks
+    renderTasks,
+    taskDelete
 } from './modules/index.js';
 
 const totalForm = document.getElementById('task-form');
@@ -9,22 +10,47 @@ const taskTitle = document.getElementById('titulo');
 const taskDescription = document.getElementById('descripcion');
 const tasksContainer = document.querySelector(".tasks-container");
 
+// se guarda en memoria
+let tareasActuales = [];
+
+
+// ========================
+// CARGA INICIAL (solo 5)
+// ========================
+document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        // obtiene todas las tareas anteriormente registradas
+        const todas = await taskGet();
+
+        // tomar solo las últimas 5 del servidor
+        tareasActuales = todas.slice(-5).reverse();
+
+        renderTasks(tareasActuales, tasksContainer);
+
+    } catch (error) {
+        console.error(error);
+        alert("Error al mostrar tareas.");
+    }
+});
+
+
+// ========================
+// CREAR TAREA
+// ========================
 totalForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     try {
-        await taskPost(
+        const nueva = await taskPost(
             taskTitle.value.trim(),
             taskDescription.value.trim()
         );
 
-        // pedir lista actualizada
-        const tareasActualizadas = await taskGet();
+        // insertar arriba en memoria
+        tareasActuales.unshift(nueva);
 
-        // pintar lista
-        renderTasks(tareasActualizadas, tasksContainer);
-
-        alert("funciona?")
+        // volver a pintar
+        renderTasks(tareasActuales, tasksContainer);
 
         totalForm.reset();
 
@@ -35,17 +61,33 @@ totalForm.addEventListener("submit", async (e) => {
 });
 
 
-document.addEventListener("DOMContentLoaded", async () => {
-    try {
-        // Buscar las ultimas 5 tareass registradas
-        const tareasRegistradas = await taskGet();
-        // listar
-        renderTasks(tareasRegistradas, tasksContainer);
+// ========================
+// BORRAR TAREA
+// ========================
+tasksContainer.addEventListener("click", async (e) => {
 
+    if (e.target.classList.contains("delete")) {
 
+        const id = e.target.dataset.id;
 
-    } catch (error) {
-        console.error(error);
-        alert("Error al mostrar tareas.");
+        // confirmación antes de borrar
+        const confirmar = confirm("¿Seguro que deseas eliminar esta tarea?");
+
+        if (!confirmar) return;
+
+        try {
+            await taskDelete(id);
+
+            const card = e.target.closest(".task-card");
+            card.remove();
+
+            // actualiza el array de las tareas registradas
+            tareasActuales = tareasActuales.filter(t => t.id != id);
+
+        } catch (error) {
+            console.error(error);
+            alert("Error al borrar tarea");
+        }
     }
 });
+
