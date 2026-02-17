@@ -7,10 +7,7 @@ async function taskGet() {
         throw new Error("Error al obtener tareas");
     }
 
-    const data = await response.json();
-
-    return data.slice().reverse().slice(0, 5);
-    ;
+    return await response.json();
 }
 
 function renderTasks(tareas, container) {
@@ -23,13 +20,16 @@ function renderTasks(tareas, container) {
         card.classList.add("task-card");
 
         card.innerHTML = `
-            <h3>${tarea.titulo}</h3>
-            <p>${tarea.descripcion}</p>
-            <div class="task-buttons">
-                <button class="btn edit" data-id="${tarea.id}">Editar</button>
-                <button class="btn delete" data-id="${tarea.id}">Borrar</button>
+            <div class="div-task">
+                <h3>${tarea.titulo}</h3>
+                <p>${tarea.descripcion}</p>
+                <div class="task-buttons">
+                    <button class="btn edit" data-id="${tarea.id}">Editar</button>
+                    <button class="btn delete" data-id="${tarea.id}">Borrar</button>
+                </div>
             </div>
-            `;
+        `;
+
 
         container.appendChild(card);
     });
