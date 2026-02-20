@@ -2,7 +2,8 @@ import {
     taskPost,
     taskGet,
     renderTasks,
-    taskDelete
+    taskDelete,
+    taskPatch
 } from './modules/index.js';
 
 const totalForm = document.getElementById('task-form');
@@ -35,36 +36,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 // ========================
-// CREAR TAREA
-// ========================
-totalForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    try {
-        const nueva = await taskPost(
-            taskTitle.value.trim(),
-            taskDescription.value.trim()
-        );
-
-        // insertar arriba en memoria
-        tareasActuales.unshift(nueva);
-
-        // volver a pintar
-        renderTasks(tareasActuales, tasksContainer);
-
-        totalForm.reset();
-
-    } catch (error) {
-        console.error(error);
-        alert("Error al crear la tarea");
-    }
-});
-
-
-// ========================
 // BORRAR TAREA
 // ========================
+// ========================
+// EDITAR TAREA
+// ========================
 tasksContainer.addEventListener("click", async (e) => {
+
+    if (e.target.classList.contains("edit")) {
+
+        const id = e.target.dataset.id;
+        const tarea = tareasActuales.find(t => t.id == id);
+
+        if (!tarea) return;
+
+        // cargar datos en el formulario
+        taskTitle.value = tarea.titulo;
+        taskDescription.value = tarea.descripcion;
+
+        // cambiar el texto del botón
+        const submitBtn = totalForm.querySelector(".submit");
+        submitBtn.textContent = "Actualizar Tarea";
+        submitBtn.dataset.editId = id;
+
+        
+        totalForm.scrollIntoView({ behavior: "smooth" });
+    }
 
     if (e.target.classList.contains("delete")) {
 
@@ -91,3 +88,64 @@ tasksContainer.addEventListener("click", async (e) => {
     }
 });
 
+// ========================
+// ACTUALIZAR TAREA (PATCH)
+// ========================
+totalForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const submitBtn = totalForm.querySelector(".submit");
+    const editId = submitBtn.dataset.editId;
+
+    // si hay un ID de edición, actualizar
+    if (editId) {
+
+        try {
+            await taskPatch(
+                editId,
+                taskTitle.value.trim(),
+                taskDescription.value.trim()
+            );
+
+            // actualizar en memoria
+            const index = tareasActuales.findIndex(t => t.id == editId);
+            if (index !== -1) {
+                tareasActuales[index].titulo = taskTitle.value.trim();
+                tareasActuales[index].descripcion = taskDescription.value.trim();
+            }
+
+            // volver a pintar
+            renderTasks(tareasActuales, tasksContainer);
+
+            // resetear formulario y botón
+            totalForm.reset();
+            submitBtn.textContent = "Guardar Tarea";
+            delete submitBtn.dataset.editId;
+
+        } catch (error) {
+            console.error(error);
+            alert("Error al actualizar la tarea");
+        }
+
+    } else {
+        // comportamiento original: crear nueva tarea
+        try {
+            const nueva = await taskPost(
+                taskTitle.value.trim(),
+                taskDescription.value.trim()
+            );
+
+            // insertar arriba en memoria
+            tareasActuales.unshift(nueva);
+
+            // volver a pintar
+            renderTasks(tareasActuales, tasksContainer);
+
+            totalForm.reset();
+
+        } catch (error) {
+            console.error(error);
+            alert("Error al crear la tarea");
+        }
+    }
+});
