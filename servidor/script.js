@@ -49,10 +49,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 // ========================
-// CAMBIO DE USUARIO
+// CAMBIO DE USUARIO (Enter en el input)
 // ========================
-userSelect.addEventListener("change", async () => {
-    await cargarTareasPorUsuario();
+userSelect.addEventListener("keypress", async (e) => {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        await cargarTareasPorUsuario();
+    }
 });
 
 

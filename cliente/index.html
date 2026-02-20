@@ -11,14 +11,10 @@
   <h1 class="app-title">Gestor de Tareas</h1>
 
   <!-- Selector de usuario -->
-  <div class="user-selector">
-    <label for="user-select" class="form-label">Seleccionar Usuario:</label>
-    <select id="user-select" class="form-input">
-      <option value="user1">Usuario 1</option>
-      <option value="user2">Usuario 2</option>
-      <option value="user3">Usuario 3</option>
-    </select>
-    <button type="button" id="refresh-btn" class="btn refresh">Actualizar Tareas</button>
+  <div class="user-selector task-form">
+    <label for="user-select" class="form-label">Ingrese su ID de usuario:</label>
+    <input type="text" id="user-select" class="form-input" placeholder="Ej: user1, user2, user3">
+    <button type="button" id="refresh-btn" class="btn refresh">Buscar Tareas</button>
   </div>
 
   <form id="task-form" class="task-form">
