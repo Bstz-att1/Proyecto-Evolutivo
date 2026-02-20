@@ -1,6 +1,7 @@
 import {
     taskPost,
     taskGet,
+    taskGetByUser,
     renderTasks,
     taskDelete,
     taskPatch
@@ -10,19 +11,23 @@ const totalForm = document.getElementById('task-form');
 const taskTitle = document.getElementById('titulo');
 const taskDescription = document.getElementById('descripcion');
 const tasksContainer = document.querySelector(".tasks-container");
+const userSelect = document.getElementById('user-select');
+const refreshBtn = document.getElementById('refresh-btn');
 
 // se guarda en memoria
 let tareasActuales = [];
 
 
 // ========================
-// CARGA INICIAL (solo 5)
+// CARGAR TAREAS POR USUARIO
 // ========================
-document.addEventListener("DOMContentLoaded", async () => {
+async function cargarTareasPorUsuario() {
+    const usuarioSeleccionado = userSelect.value;
+    
     try {
-        // obtiene todas las tareas anteriormente registradas
-        const todas = await taskGet();
-
+        // Consulta la API RESTful para obtener tareas del usuario seleccionado
+        const todas = await taskGetByUser(usuarioSeleccionado);
+        
         // tomar solo las últimas 5 del servidor
         tareasActuales = todas.slice(-5).reverse();
 
@@ -32,6 +37,30 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.error(error);
         alert("Error al mostrar tareas.");
     }
+}
+
+
+// ========================
+// CARGA INICIAL
+// ========================
+document.addEventListener("DOMContentLoaded", async () => {
+    await cargarTareasPorUsuario();
+});
+
+
+// ========================
+// CAMBIO DE USUARIO
+// ========================
+userSelect.addEventListener("change", async () => {
+    await cargarTareasPorUsuario();
+});
+
+
+// ========================
+// BOTÓN ACTUALIZAR
+// ========================
+refreshBtn.addEventListener("click", async () => {
+    await cargarTareasPorUsuario();
 });
 
 
@@ -130,9 +159,12 @@ totalForm.addEventListener("submit", async (e) => {
     } else {
         // comportamiento original: crear nueva tarea
         try {
+            const usuarioSeleccionado = userSelect.value;
+            
             const nueva = await taskPost(
                 taskTitle.value.trim(),
-                taskDescription.value.trim()
+                taskDescription.value.trim(),
+                usuarioSeleccionado
             );
 
             // insertar arriba en memoria
