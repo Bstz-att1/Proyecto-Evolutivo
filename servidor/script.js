@@ -11,8 +11,17 @@ const totalForm = document.getElementById('task-form');
 const taskTitle = document.getElementById('titulo');
 const taskDescription = document.getElementById('descripcion');
 const tasksContainer = document.querySelector(".tasks-container");
-const userSelect = document.getElementById('user-select');
+const userSelect = document.getElementById('user-id');
+const userSelectExternal = document.getElementById('user-select');
 const refreshBtn = document.getElementById('refresh-btn');
+
+// Sincronizar los dos campos de usuario
+userSelectExternal.addEventListener('input', () => {
+    userSelect.value = userSelectExternal.value;
+});
+userSelect.addEventListener('input', () => {
+    userSelectExternal.value = userSelect.value;
+});
 
 // Elementos para mensajes
 const globalError = document.getElementById('global-error');
@@ -200,6 +209,8 @@ tasksContainer.addEventListener("click", async (e) => {
         // cargar datos en el formulario
         taskTitle.value = tarea.titulo;
         taskDescription.value = tarea.descripcion;
+        userSelect.value = tarea.userId;
+        userSelectExternal.value = tarea.userId;
 
         // cambiar el texto del botón
         const submitBtn = totalForm.querySelector(".submit");
@@ -250,10 +261,13 @@ totalForm.addEventListener("submit", async (e) => {
     // si hay un ID de edición, actualizar (PATCH)
     if (editId) {
         try {
+            const usuarioSeleccionado = userSelect.value.trim();
+            
             await taskPatch(
                 editId,
                 taskTitle.value.trim(),
-                taskDescription.value.trim()
+                taskDescription.value.trim(),
+                usuarioSeleccionado
             );
 
             // actualizar en memoria
@@ -261,6 +275,7 @@ totalForm.addEventListener("submit", async (e) => {
             if (index !== -1) {
                 tareasActuales[index].titulo = taskTitle.value.trim();
                 tareasActuales[index].descripcion = taskDescription.value.trim();
+                tareasActuales[index].userId = usuarioSeleccionado;
             }
 
             // volver a pintar
