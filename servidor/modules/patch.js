@@ -1,5 +1,6 @@
 const API_URL = "http://localhost:3000/todos";
 
+// Actualiza una tarea por ID
 async function taskPatch(id, titulo, descripcion) {
     const response = await fetch(`${API_URL}/${id}`, {
         method: 'PATCH',
