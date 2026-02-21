@@ -37,8 +37,8 @@ function renderTasks(tareas, container) {
                 <h3>${tarea.titulo}</h3>
                 <p>${tarea.descripcion}</p>
                 <div class="task-buttons">
-                    <button class="btn edit" data-id="${tarea.id}">Editar</button>
-                    <button class="btn delete" data-id="${tarea.id}">Borrar</button>
+                    <button type="button" class="btn edit" data-id="${tarea.id}">Editar</button>
+                    <button type="button" class="btn delete" data-id="${tarea.id}">Borrar</button>
                 </div>
             </div>
         `;

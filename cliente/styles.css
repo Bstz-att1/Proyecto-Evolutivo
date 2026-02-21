@@ -225,3 +225,58 @@ body {
     transform: translateY(0);
   }
 }
+
+/* ===================== */
+/* MENSAJES DE VALIDACIÓN */
+/* ===================== */
+
+.message {
+  padding: 12px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.success-message {
+  background-color: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+/* Estilos para errores de campo específico */
+.field-error {
+  display: block;
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 5px;
+  min-height: 18px;
+}
+
+/* Input con error */
+.form-input.error,
+.form-textarea.error {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2;
+}
+
+.form-input.error:focus,
+.form-textarea.error:focus {
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.15);
+}
+
+/* ===================== */
+/* ESTADOS DE CARGA */
+/* ===================== */
+
+.btn.submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

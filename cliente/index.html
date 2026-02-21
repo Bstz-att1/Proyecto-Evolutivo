@@ -18,14 +18,28 @@
   </div>
 
   <form id="task-form" class="task-form">
+    <!-- Contenedor para mensajes de error globales -->
+    <div id="global-error" class="message error-message" style="display: none;"></div>
+    
+    <!-- Contenedor para mensajes de éxito -->
+    <div id="success-message" class="message success-message" style="display: none;"></div>
+
     <div class="form-group">
       <label for="titulo" class="form-label">Título</label>
       <input type="text" id="titulo" name="titulo" class="form-input" required>
+      <span id="error-titulo" class="field-error"></span>
     </div>
 
     <div class="form-group">
       <label for="descripcion" class="form-label">Descripción</label>
       <textarea id="descripcion" name="descripcion" rows="4" class="form-textarea" required></textarea>
+      <span id="error-descripcion" class="field-error"></span>
+    </div>
+
+    <div class="form-group">
+      <label for="user-select-form" class="form-label">Usuario</label>
+      <input type="text" id="user-select-form" class="form-input" placeholder="Ej: user1, user2, user3" required>
+      <span id="error-usuario" class="field-error"></span>
     </div>
 
     <button type="submit" class="btn submit">Guardar Tarea</button>
