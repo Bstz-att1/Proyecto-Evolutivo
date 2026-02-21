@@ -7,9 +7,6 @@ import {
     taskPatch
 } from './modules/index.js';
 
-app.listen(3000, "0.0.0.0", () => {
-  console.log("Servidor escuchando en puerto 3000");
-});
 
 const totalForm = document.getElementById('task-form');
 const taskTitle = document.getElementById('titulo');
