@@ -30,6 +30,14 @@ const errorTitulo = document.getElementById('error-titulo');
 const errorDescripcion = document.getElementById('error-descripcion');
 const errorUsuario = document.getElementById('error-usuario');
 
+// Elementos del modal de eliminación
+const deleteModal = document.getElementById('delete-modal');
+const confirmDeleteBtn = document.getElementById('confirm-delete');
+const cancelDeleteBtn = document.getElementById('cancel-delete');
+
+let deleteTaskId = null;
+let deleteEventTarget = null;
+
 // se guarda en memoria
 let tareasActuales = [];
 
@@ -225,24 +233,58 @@ tasksContainer.addEventListener("click", async (e) => {
 
         const id = e.target.dataset.id;
 
-        // confirmación antes de borrar
-        const confirmar = confirm("¿Seguro que deseas eliminar esta tarea?");
+        // Guardar el ID y referencia del evento para usar en el modal
+        deleteTaskId = id;
+        deleteEventTarget = e.target;
 
-        if (!confirmar) return;
+        // Mostrar modal de confirmación
+        deleteModal.classList.add('show');
+    }
+});
 
-        try {
-            await taskDelete(id);
+// Función para ejecutar la eliminación
+async function executeDelete() {
+    if (!deleteTaskId) return;
 
-            const card = e.target.closest(".task-card");
-            card.remove();
+    try {
+        await taskDelete(deleteTaskId);
 
-            // actualiza el array de las tareas registradas
-            tareasActuales = tareasActuales.filter(t => t.id != id);
+        const card = deleteEventTarget.closest(".task-card");
+        card.remove();
 
-        } catch (error) {
-            console.error(error);
-            alert("Error al borrar tarea");
-        }
+        // actualiza el array de las tareas registradas
+        tareasActuales = tareasActuales.filter(t => t.id != deleteTaskId);
+
+        // Mostrar mensaje de éxito
+        showSuccessMessage('✅ Tarea eliminada correctamente.');
+
+    } catch (error) {
+        console.error(error);
+        showGlobalError('Error del sistema: No se pudo eliminar la tarea. Por favor, intente más tarde.');
+    } finally {
+        // Cerrar modal y limpiar variables
+        deleteModal.classList.remove('show');
+        deleteTaskId = null;
+        deleteEventTarget = null;
+    }
+}
+
+// Event listeners del modal de eliminación
+confirmDeleteBtn.addEventListener('click', executeDelete);
+
+cancelDeleteBtn.addEventListener('click', () => {
+    // Cerrar modal sin eliminar
+    deleteModal.classList.remove('show');
+    deleteTaskId = null;
+    deleteEventTarget = null;
+});
+
+// Cerrar modal al hacer clic fuera del contenido
+deleteModal.addEventListener('click', (e) => {
+    if (e.target === deleteModal) {
+        deleteModal.classList.remove('show');
+        deleteTaskId = null;
+        deleteEventTarget = null;
     }
 });
 
