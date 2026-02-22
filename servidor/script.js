@@ -7,15 +7,148 @@ import {
     taskPatch
 } from './modules/index.js';
 
+
 const totalForm = document.getElementById('task-form');
 const taskTitle = document.getElementById('titulo');
 const taskDescription = document.getElementById('descripcion');
 const tasksContainer = document.querySelector(".tasks-container");
-const userSelect = document.getElementById('user-select');
+const userSelect = document.getElementById('user-id');
+const userSelectExternal = document.getElementById('user-select');
 const refreshBtn = document.getElementById('refresh-btn');
+
+// Sincronizar los dos campos de usuario
+userSelectExternal.addEventListener('input', () => {
+    userSelect.value = userSelectExternal.value;
+});
+userSelect.addEventListener('input', () => {
+    userSelectExternal.value = userSelect.value;
+});
+
+// Elementos para mensajes
+const globalError = document.getElementById('global-error');
+const successMessage = document.getElementById('success-message');
+const errorTitulo = document.getElementById('error-titulo');
+const errorDescripcion = document.getElementById('error-descripcion');
+const errorUsuario = document.getElementById('error-usuario');
+
+// Elementos del modal de eliminación
+const deleteModal = document.getElementById('delete-modal');
+const confirmDeleteBtn = document.getElementById('confirm-delete');
+const cancelDeleteBtn = document.getElementById('cancel-delete');
+
+let deleteTaskId = null;
+let deleteEventTarget = null;
 
 // se guarda en memoria
 let tareasActuales = [];
+
+// ========================
+// FUNCIONES DE VALIDACIÓN Y MENSAJES
+// ========================
+
+/**
+ * Limpia todos los mensajes de error
+ */
+function clearErrorMessages() {
+    globalError.style.display = 'none';
+    globalError.textContent = '';
+    
+    successMessage.style.display = 'none';
+    successMessage.textContent = '';
+    
+    errorTitulo.textContent = '';
+    errorDescripcion.textContent = '';
+    errorUsuario.textContent = '';
+    
+    taskTitle.classList.remove('error');
+    taskDescription.classList.remove('error');
+    userSelect.classList.remove('error');
+}
+
+/**
+ * Muestra un mensaje de error global
+ */
+function showGlobalError(message) {
+    globalError.textContent = message;
+    globalError.style.display = 'block';
+    successMessage.style.display = 'none';
+}
+
+/**
+ * Muestra un mensaje de éxito
+ */
+function showSuccessMessage(message) {
+    successMessage.textContent = message;
+    successMessage.style.display = 'block';
+    globalError.style.display = 'none';
+    
+    // Ocultar después de 5 segundos
+    setTimeout(() => {
+        successMessage.style.display = 'none';
+    }, 5000);
+}
+
+/**
+ * Muestra error en un campo específico
+ */
+function showFieldError(fieldElement, errorElement, message) {
+    fieldElement.classList.add('error');
+    errorElement.textContent = message;
+}
+
+/**
+ * Valida los campos del formulario
+ * @returns {Object} - Objeto con errores encontrados
+ */
+function validateForm() {
+    const errors = {};
+    const titulo = taskTitle.value.trim();
+    const descripcion = taskDescription.value.trim();
+    const usuario = userSelect.value.trim();
+    
+    // Validar título
+    if (!titulo) {
+        errors.titulo = 'El título es obligatorio. Por favor, ingréselo.';
+    } else if (titulo.length < 3) {
+        errors.titulo = 'El título debe tener al menos 3 caracteres.';
+    }
+    
+    // Validar descripción
+    if (!descripcion) {
+        errors.descripcion = 'La descripción es obligatoria. Por favor, ingrésela.';
+    } else if (descripcion.length < 10) {
+        errors.descripcion = 'La descripción debe tener al menos 10 caracteres.';
+    }
+    
+    // Validar usuario
+    if (!usuario) {
+        errors.usuario = 'El usuario es obligatorio. Por favor, seleccione un usuario.';
+    }
+    
+    return errors;
+}
+
+/**
+ * Aplica los errores de validación al formulario
+ */
+function applyValidationErrors(errors) {
+    if (errors.titulo) {
+        showFieldError(taskTitle, errorTitulo, errors.titulo);
+    }
+    
+    if (errors.descripcion) {
+        showFieldError(taskDescription, errorDescripcion, errors.descripcion);
+    }
+    
+    if (errors.usuario) {
+        showFieldError(userSelect, errorUsuario, errors.usuario);
+    }
+    
+    // Si hay errores, mostrar mensaje global
+    if (Object.keys(errors).length > 0) {
+        showGlobalError('Por favor, corrija los errores indicados en el formulario.');
+    }
+}
 
 
 // ========================
@@ -123,6 +256,8 @@ tasksContainer.addEventListener("click", async (e) => {
 
         taskTitle.value = tarea.titulo;
         taskDescription.value = tarea.descripcion;
+        userSelect.value = tarea.userId;
+        userSelectExternal.value = tarea.userId;
 
         // Cambiar botón a modo actualización
         const submitBtn = totalForm.querySelector(".submit");

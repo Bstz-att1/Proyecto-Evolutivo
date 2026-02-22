@@ -9,7 +9,8 @@ async function taskPatch(id, titulo, descripcion) {
         },
         body: JSON.stringify({
             titulo: titulo,
-            descripcion: descripcion
+            descripcion: descripcion,
+            userId: userId
         })
     });
 
