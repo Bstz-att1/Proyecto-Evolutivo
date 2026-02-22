@@ -152,23 +152,63 @@ function applyValidationErrors(errors) {
 
 
 // ========================
+// SISTEMA DE NOTIFICACIONES
+// ========================
+// Muestra mensajes visuales con feedback al usuario (éxito, error, advertencia, info)
+function mostrarNotificacion(mensaje, tipo = 'info') {
+    // Crear/obtener contenedor de notificaciones
+    let contenedor = document.getElementById('notificacion-contenedor');
+    if (!contenedor) {
+        contenedor = document.createElement('div');
+        contenedor.id = 'notificacion-contenedor';
+        document.body.appendChild(contenedor);
+    }
+
+    // Crear y estilizar notificación
+    const notificacion = document.createElement('div');
+    notificacion.className = `notificacion notificacion-${tipo}`;
+    notificacion.textContent = mensaje;
+    contenedor.appendChild(notificacion);
+
+    // Auto-eliminar después de 4 segundos
+    setTimeout(() => {
+        notificacion.classList.add('notificacion-salida');
+        setTimeout(() => notificacion.remove(), 300);
+    }, 4000);
+}
+
+
+// ========================
 // CARGAR TAREAS POR USUARIO
 // ========================
+// Obtiene tareas del servidor filtradas por usuario y las renderiza
 async function cargarTareasPorUsuario() {
-    const usuarioSeleccionado = userSelect.value;
+    const usuarioSeleccionado = userSelect.value.trim();
+    
+    // Validar entrada user
+    if (!usuarioSeleccionado) {
+        mostrarNotificacion("Por favor ingresa un ID de usuario", 'advertencia');
+        return;
+    }
     
     try {
-        // Consulta la API RESTful para obtener tareas del usuario seleccionado
+        // Obtener tareas del usuario
         const todas = await taskGetByUser(usuarioSeleccionado);
         
-        // tomar solo las últimas 5 del servidor
+        // Tomar últimas 5 tareas en orden descendente
         tareasActuales = todas.slice(-5).reverse();
-
         renderTasks(tareasActuales, tasksContainer);
+        
+        // Notificar estado
+        if (tareasActuales.length === 0) {
+            mostrarNotificacion(`No hay tareas para el usuario: ${usuarioSeleccionado}`, 'info');
+        } else {
+            mostrarNotificacion(`Se cargaron ${tareasActuales.length} tarea(s)`, 'éxito');
+        }
 
     } catch (error) {
         console.error(error);
-        alert("Error al mostrar tareas.");
+        mostrarNotificacion(`Error al cargar tareas: ${error.message}`, 'error');
     }
 }
 
@@ -209,177 +249,108 @@ refreshBtn.addEventListener("click", async () => {
 tasksContainer.addEventListener("click", async (e) => {
 
     if (e.target.classList.contains("edit")) {
-
+        // Cargar datos de tarea en formulario para edición
         const id = e.target.dataset.id;
         const tarea = tareasActuales.find(t => t.id == id);
-
         if (!tarea) return;
 
-        // cargar datos en el formulario
         taskTitle.value = tarea.titulo;
         taskDescription.value = tarea.descripcion;
         userSelect.value = tarea.userId;
         userSelectExternal.value = tarea.userId;
 
-        // cambiar el texto del botón
+        // Cambiar botón a modo actualización
         const submitBtn = totalForm.querySelector(".submit");
         submitBtn.textContent = "Actualizar Tarea";
         submitBtn.dataset.editId = id;
 
-        
+        mostrarNotificacion("Editando tarea. Realiza los cambios y presiona 'Actualizar Tarea'", 'info');
         totalForm.scrollIntoView({ behavior: "smooth" });
     }
 
     if (e.target.classList.contains("delete")) {
-
+        // Eliminar tarea tras confirmación
         const id = e.target.dataset.id;
+        const confirmar = confirm("¿Seguro que deseas eliminar esta tarea?");
 
-        // Guardar el ID y referencia del evento para usar en el modal
-        deleteTaskId = id;
-        deleteEventTarget = e.target;
+        if (!confirmar) {
+            mostrarNotificacion("Eliminación cancelada", 'advertencia');
+            return;
+        }
 
-        // Mostrar modal de confirmación
-        deleteModal.classList.add('show');
-    }
-});
-
-// Función para ejecutar la eliminación
-async function executeDelete() {
-    if (!deleteTaskId) return;
-
-    try {
-        await taskDelete(deleteTaskId);
-
-        const card = deleteEventTarget.closest(".task-card");
-        card.remove();
-
-        // actualiza el array de las tareas registradas
-        tareasActuales = tareasActuales.filter(t => t.id != deleteTaskId);
-
-        // Mostrar mensaje de éxito
-        showSuccessMessage('✅ Tarea eliminada correctamente.');
-
-    } catch (error) {
-        console.error(error);
-        showGlobalError('Error del sistema: No se pudo eliminar la tarea. Por favor, intente más tarde.');
-    } finally {
-        // Cerrar modal y limpiar variables
-        deleteModal.classList.remove('show');
-        deleteTaskId = null;
-        deleteEventTarget = null;
-    }
-}
-
-// Event listeners del modal de eliminación
-confirmDeleteBtn.addEventListener('click', executeDelete);
-
-cancelDeleteBtn.addEventListener('click', () => {
-    // Cerrar modal sin eliminar
-    deleteModal.classList.remove('show');
-    deleteTaskId = null;
-    deleteEventTarget = null;
-});
-
-// Cerrar modal al hacer clic fuera del contenido
-deleteModal.addEventListener('click', (e) => {
-    if (e.target === deleteModal) {
-        deleteModal.classList.remove('show');
-        deleteTaskId = null;
-        deleteEventTarget = null;
+        try {
+            await taskDelete(id);
+            e.target.closest(".task-card").remove();
+            tareasActuales = tareasActuales.filter(t => t.id != id);
+            mostrarNotificacion("Tarea eliminada correctamente", 'éxito');
+        } catch (error) {
+            console.error(error);
+            mostrarNotificacion(`Error al eliminar tarea: ${error.message}`, 'error');
+        }
     }
 });
 
 // ========================
-// GUARDAR TAREA (CREATE - POST)
+// CREAR/ACTUALIZAR TAREA
 // ========================
+// Valida campos y envía datos al servidor (POST o PATCH)
 totalForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const submitBtn = totalForm.querySelector(".submit");
     const editId = submitBtn.dataset.editId;
+    const titulo = taskTitle.value.trim();
+    const descripcion = taskDescription.value.trim();
 
-    // Limpiar mensajes anteriores
-    clearErrorMessages();
+    // Validar campos obligatorios
+    if (!titulo) {
+        mostrarNotificacion("El título es obligatorio", 'advertencia');
+        return;
+    }
+    if (!descripcion) {
+        mostrarNotificacion("La descripción es obligatoria", 'advertencia');
+        return;
+    }
 
-    // si hay un ID de edición, actualizar (PATCH)
+    // Modo actualización (PATCH)
     if (editId) {
         try {
-            const usuarioSeleccionado = userSelect.value.trim();
+            await taskPatch(editId, titulo, descripcion);
             
-            await taskPatch(
-                editId,
-                taskTitle.value.trim(),
-                taskDescription.value.trim(),
-                usuarioSeleccionado
-            );
-
-            // actualizar en memoria
+            // Actualizar en memoria y re-renderizar
             const index = tareasActuales.findIndex(t => t.id == editId);
             if (index !== -1) {
-                tareasActuales[index].titulo = taskTitle.value.trim();
-                tareasActuales[index].descripcion = taskDescription.value.trim();
-                tareasActuales[index].userId = usuarioSeleccionado;
+                tareasActuales[index].titulo = titulo;
+                tareasActuales[index].descripcion = descripcion;
             }
-
-            // volver a pintar
             renderTasks(tareasActuales, tasksContainer);
-
-            // Mostrar mensaje de éxito
-            showSuccessMessage('✅ Tarea actualizada correctamente.');
-
-            // resetear formulario y botón
+            
+            // Limpiar formulario
             totalForm.reset();
             submitBtn.textContent = "Guardar Tarea";
             delete submitBtn.dataset.editId;
-
+            mostrarNotificacion("Tarea actualizada correctamente", 'éxito');
         } catch (error) {
             console.error(error);
-            showGlobalError('Error del sistema: No se pudo actualizar la tarea. Por favor, intente más tarde.');
+            mostrarNotificacion(`Error al actualizar tarea: ${error.message}`, 'error');
         }
-
     } else {
-        // Validar campos antes de enviar
-        const validationErrors = validateForm();
-        
-        // Si hay errores de validación, mostrarlos
-        if (Object.keys(validationErrors).length > 0) {
-            applyValidationErrors(validationErrors);
-            return; // Detener el envío del formulario
+        // Modo creación (POST)
+        const usuarioSeleccionado = userSelect.value.trim();
+        if (!usuarioSeleccionado) {
+            mostrarNotificacion("Por favor selecciona un usuario para crear tareas", 'advertencia');
+            return;
         }
-        
-        // Comportamiento original: crear nueva tarea
+
         try {
-            const usuarioSeleccionado = userSelect.value.trim();
-            
-            const nueva = await taskPost(
-                taskTitle.value.trim(),
-                taskDescription.value.trim(),
-                usuarioSeleccionado
-            );
-
-            // insertar arriba en memoria
+            const nueva = await taskPost(titulo, descripcion, usuarioSeleccionado);
             tareasActuales.unshift(nueva);
-
-            // volver a pintar
             renderTasks(tareasActuales, tasksContainer);
-
-            // Mostrar mensaje de éxito
-            showSuccessMessage('✅ Tarea registrada exitosamente.');
-
             totalForm.reset();
-
+            mostrarNotificacion("Tarea creada correctamente", 'éxito');
         } catch (error) {
             console.error(error);
-            // Determinar el tipo de error para mostrar mensaje apropiado
-            if (error.message && error.message.includes('Failed to fetch')) {
-                showGlobalError('Error de conexión: No se pudo conectar con el servidor. Verifique su conexión a internet e intente más tarde.');
-            } else if (error.message && error.message.includes('500')) {
-                showGlobalError('Error del servidor: Ocurrió un problema interno. Por favor, intente más tarde.');
-            } else if (error.message && error.message.includes('404')) {
-                showGlobalError('Error: No se encontró el recurso solicitado. Contacte al administrador.');
-            } else {
-                showGlobalError('Error del sistema: No se pudo registrar la tarea. Por favor, intente más tarde.');
-            }
+            mostrarNotificacion(`Error al crear tarea: ${error.message}`, 'error');
         }
     }
 });

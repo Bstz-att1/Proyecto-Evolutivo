@@ -1,7 +1,7 @@
 const API_URL = "http://localhost:3000/todos";
 
+// Elimina una tarea por ID
 async function taskDelete(id) {
-
     const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE"
     });
