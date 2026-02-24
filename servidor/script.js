@@ -167,7 +167,7 @@ totalForm.addEventListener("submit", async (e) => {
     const titulo = taskTitle.value.trim();
     const descripcion = taskDescription.value.trim();
 
-    // Validar campos obligatorios
+
     if (!titulo) {
         mostrarNotificacion("El título es obligatorio", 'advertencia');
         return;
