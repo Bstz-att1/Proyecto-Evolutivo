@@ -51,6 +51,9 @@ export function renderizarTareas(tareas, container) {
             <div class="div-task">
                 <h3>${tarea.titulo}</h3>
                 <p>${tarea.descripcion}</p>
+                <div class="task-estado">
+                    <span class="estado-badge estado-${tarea.estado?.replace(/\s+/g, '-')}">${tarea.estado || 'Sin estado'}</span>
+                </div>
                 <div class="task-buttons">
                     <button type="button" class="btn edit" data-id="${tarea.id}">Editar</button>
                     <button type="button" class="btn delete" data-id="${tarea.id}">Borrar</button>

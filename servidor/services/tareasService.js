@@ -42,6 +42,17 @@ export async function obtenerTareasPorUsuario(userId) {
 }
 
 /**
+ * Filtra tareas por estado
+ * @param {Array} tareas - Array de tareas a filtrar
+ * @param {string} estado - Estado a filtrar (pendiente, en progreso, completada)
+ * @returns {Array} - Array de tareas filtradas
+ */
+export function filtrarTareasPorEstado(tareas, estado) {
+    if (!estado) return tareas;
+    return tareas.filter(tarea => tarea.estado === estado);
+}
+
+/**
  * Elimina una tarea
  * @param {string} id - ID de la tarea a eliminar
  * @returns {Promise<boolean>} - true si se eliminó correctamente

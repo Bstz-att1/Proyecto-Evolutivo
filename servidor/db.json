@@ -36,91 +36,106 @@
       "id": "a1b2",
       "titulo": "Revisar código del módulo de autenticación",
       "descripcion": "Realizar code review del módulo de login y registro de usuarios. Verificar implementación de JWT y políticas de contraseña.",
-      "userId": "user1"
+      "userId": "user1",
+      "estado": "completada"
     },
     {
       "id": "c3d4",
       "titulo": "Diseñar interfaz de usuario para el dashboard",
       "descripcion": "Crear mockups y prototipos para el nuevo dashboard de analytics. Incluir gráficos interactivos y métricas clave.",
-      "userId": "user2"
+      "userId": "user2",
+      "estado": "en progreso"
     },
     {
       "id": "e5f6",
       "titulo": "Preparar informe de avance del proyecto Sprint 12",
       "descripcion": "Compilar métricas del sprint, pendientes y achievements para la reunión de stakeholders del viernes.",
-      "userId": "user3"
+      "userId": "user3",
+      "estado": "pendiente"
     },
     {
       "id": "g7h8",
       "titulo": "Implementar API REST para módulo de reportes",
       "descripcion": "Desarrollar endpoints GET/POST para generación de reportes PDF y Excel. Integrar con servicio de facturación.",
-      "userId": "user4"
+      "userId": "user4",
+      "estado": "en progreso"
     },
     {
       "id": "i9j0",
       "titulo": "Corregir bug en el formulario de contacto",
       "descripcion": "El formulario no valida correctamente el campo de email en dispositivos móviles. Revisar validación con JavaScript.",
-      "userId": "user5"
+      "userId": "user5",
+      "estado": "completada"
     },
     {
       "id": "k1l2",
       "titulo": "Realizar pruebas unitarias del módulo de pagos",
       "descripcion": "Escribir tests unitarios para cobertura del 80% en el módulo de procesamiento de pagos con Stripe.",
-      "userId": "user1"
+      "userId": "user1",
+      "estado": "pendiente"
     },
     {
       "id": "m3n4",
       "titulo": "Crear prototipos para nueva función de chat",
       "descripcion": "Diseñar interfaz de chat en tiempo real para soporte al cliente. Incluir indicadores de escritura y lectura.",
-      "userId": "user2"
+      "userId": "user2",
+      "estado": "en progreso"
     },
     {
       "id": "o5p6",
       "titulo": "Coordinar reunión con stakeholders",
       "descripcion": "Programar y preparar agenda para reunión con clientes sobre nuevos requerimientos del proyecto.",
-      "userId": "user3"
+      "userId": "user3",
+      "estado": "completada"
     },
     {
       "id": "q7r8",
       "titulo": "Optimizar consultas de base de datos",
       "descripcion": "El rendimiento de la consulta de reportes está lento. Analizar explain plan y agregar índices necesarios.",
-      "userId": "user4"
+      "userId": "user4",
+      "estado": "pendiente"
     },
     {
       "id": "s9t0",
       "titulo": "Implementar diseño responsivo en página principal",
       "descripcion": "Adaptar landing page para visualización correcta en dispositivos móviles y tablets. Testing en múltiples viewports.",
-      "userId": "user5"
+      "userId": "user5",
+      "estado": "en progreso"
     },
     {
       "id": "u1v2",
       "titulo": "Documentar API del sistema de notificaciones",
       "descripcion": "Generar documentación técnica con Swagger/OpenAPI para el sistema de notificaciones push y email.",
-      "userId": "user1"
+      "userId": "user1",
+      "estado": "pendiente"
     },
     {
       "id": "w3x4",
       "titulo": "Revisar accesibilidad de componentes UI",
       "descripcion": "Verificar cumplimiento de WCAG 2.1 en botones, formularios y navegación. Implementar mejoras de a11y.",
-      "userId": "user2"
+      "userId": "user2",
+      "estado": "completada"
     },
     {
       "id": "y5z6",
       "titulo": "Actualizar backlog del producto",
       "descripcion": "Priorizar y estimar historias de usuario para el próximo sprint basadas en feedback del cliente.",
-      "userId": "user3"
+      "userId": "user3",
+      "estado": "en progreso"
     },
     {
       "id": "a7b8",
       "titulo": "Configurar pipeline de CI/CD",
       "descripcion": "Implementar integración continua con GitHub Actions. Incluir testing automático y deployment a staging.",
-      "userId": "user4"
+      "userId": "user4",
+      "estado": "pendiente"
     },
     {
       "id": "c9d0",
       "titulo": "Desarrollar componente de calendario",
       "descripcion": "Crear componente de selección de fechas para el sistema de reservas. Integrar con librería existente.",
-      "userId": "user5"
+      "userId": "user5",
+      "estado": "completada"
     }
   ]
 }

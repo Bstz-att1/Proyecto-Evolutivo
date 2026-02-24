@@ -17,6 +17,16 @@
     <button type="button" id="refresh-btn" class="btn refresh">Buscar Tareas</button>
   </div>
 
+  <div class="filter-estado task-form">
+    <label for="estado-filter" class="form-label">Filtrar por Estado:</label>
+    <select id="estado-filter" class="form-input">
+      <option value="">Todos</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="en progreso">En Progreso</option>
+      <option value="completada">Completada</option>
+    </select>
+  </div>
+
   <form id="task-form" class="task-form">
     <!-- Contenedor para mensajes de error globales -->
     <div id="global-error" class="message error-message" style="display: none;"></div>
@@ -62,7 +72,7 @@
       </div>
     </div>
   </div>
-
+    
   <script type="module" src="servidor/script.js"></script>
 </body>
 

@@ -8,7 +8,8 @@ import {
     crearTarea, 
     obtenerTareasPorUsuario, 
     eliminarTarea, 
-    actualizarTarea 
+    actualizarTarea,
+    filtrarTareasPorEstado
 } from './services/tareasService.js';
 
 // Importar UI (manipulación del DOM)
@@ -38,6 +39,7 @@ const tasksContainer = document.querySelector(".tasks-container");
 const userSelect = document.getElementById('user-id');
 const userSelectExternal = document.getElementById('user-select');
 const refreshBtn = document.getElementById('refresh-btn');
+const estadoFilter = document.getElementById('estado-filter');
 
 // Elementos del modal de eliminación
 const deleteModal = document.getElementById('delete-modal');
@@ -48,6 +50,7 @@ const cancelDeleteBtn = document.getElementById('cancel-delete');
 let tareasActuales = [];
 let deleteTaskId = null;
 let deleteEventTarget = null;
+let estadoActual = '';
 
 // ========================
 // SINCRONIZAR CAMPOS DE USUARIO
@@ -75,6 +78,12 @@ async function cargarTareasPorUsuario() {
     try {
         // Usar el servicio para obtener tareas del usuario
         tareasActuales = await obtenerTareasPorUsuario(usuarioSeleccionado);
+
+        // Resetear filtro de estado
+        if (estadoFilter) {
+            estadoFilter.value = '';
+            estadoActual = '';
+        }
 
         // Usar UI para renderizar
         renderizarTareas(tareasActuales, tasksContainer);
@@ -113,6 +122,17 @@ if (userSelectExternal) {
 if (refreshBtn) {
     refreshBtn.addEventListener("click", async () => {
         await cargarTareasPorUsuario();
+    });
+}
+
+// ========================
+// FILTRO POR ESTADO
+// ========================
+if (estadoFilter) {
+    estadoFilter.addEventListener("change", (e) => {
+        estadoActual = e.target.value;
+        const tareasFiltradas = filtrarTareasPorEstado(tareasActuales, estadoActual);
+        renderizarTareas(tareasFiltradas, tasksContainer);
     });
 }
 
@@ -252,8 +272,9 @@ async function handleCreateTask() {
         // Insertar arriba en memoria
         tareasActuales.unshift(nueva);
 
-        // Usar UI para renderizar
-        renderizarTareas(tareasActuales, tasksContainer);
+        // Usar UI para renderizar (aplicando filtro si está activo)
+        const tareasFiltradas = filtrarTareasPorEstado(tareasActuales, estadoActual);
+        renderizarTareas(tareasFiltradas, tasksContainer);
 
         // Mostrar mensaje de éxito
         mostrarExito('✅ Tarea registrada exitosamente.');
@@ -296,8 +317,9 @@ async function manejarActualizacion(editId) {
             tareasActuales[index].userId = usuario;
         }
 
-        // Usar UI para renderizar
-        renderizarTareas(tareasActuales, tasksContainer);
+        // Usar UI para renderizar (aplicando filtro si está activo)
+        const tareasFiltradas = filtrarTareasPorEstado(tareasActuales, estadoActual);
+        renderizarTareas(tareasFiltradas, tasksContainer);
 
         // Mostrar mensaje de éxito
         mostrarExito('✅ Tarea actualizada correctamente.');
