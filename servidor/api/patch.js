@@ -1,7 +1,6 @@
 const API_URL = "http://localhost:3000/todos";
 
-// Actualiza una tarea por ID
-async function taskPatch(id, titulo, descripcion) {
+async function taskPatch(id, titulo, descripcion, userId) {
     const response = await fetch(`${API_URL}/${id}`, {
         method: 'PATCH',
         headers: {
@@ -9,7 +8,8 @@ async function taskPatch(id, titulo, descripcion) {
         },
         body: JSON.stringify({
             titulo: titulo,
-            descripcion: descripcion
+            descripcion: descripcion,
+            userId: userId
         })
     });
 

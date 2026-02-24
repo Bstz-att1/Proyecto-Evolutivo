@@ -1,0 +1,449 @@
+Gestor de tareas
+
+Tareas: 
+-Crear tareas
+-Listar tareas
+-Actualizar nombre de una tarea
+-Borrar
+
+Usar API con host: https://jsonplaceholder.typicode.com/todos
+
+
+=== PARTE 1: COMPRENDIENDO ANTES DE PROGRAMAR ===
+
+1. ¿Qué método HTTP usarían para:
+• Crear una tarea : POST
+• Listar tareas: GET
+• Actualizar una tarea: PUT o PATCH
+• Eliminar una tarea: DELETE
+
+2. ¿Qué información necesitarían enviar al servidor para actualizar o eliminar una
+tarea? 
+El identificador de la tarea, junto al metodo; 
+Si se busca borrar, el metodo corresponde a DELETE y no es necesario estructurar el header
+o el body del HTTP.
+En cambio, si se realiza una actualizacion, despues de identificar la tarea, se estructura 
+el HTTP conformado por el metodo, header y body.
+
+3. ¿En qué momento debe actualizarse el DOM?
+Despues de recibir respuesta del servidor, con estos datos se actualiza la 
+informacion del DOM.
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+=== PARTE 2: INPLEMENTACION GUIADA ===
+
+2. ¿En qué momento se transforman los datos JSON en elementos HTML?
+Una vez ya tenemos respuesta del servidor, lo agregamos directamente al cuerpo 
+del HTML con el uso del DOM con javaScript.
+
+3. ¿Qué ocurre primero: se actualiza el DOM o se envía la solicitud al servidor?
+Primero se envia la solicitud al servidor, ya que sin una informacion de retorno la
+cual nos va a brindar esta misma, no podriamos actualizar el DOM.
+
+4. ¿Por qué es importante el id en esta operación?
+Para reconocer el elemento exacto que se desea eliminar.
+
+5. ¿Qué diferencia existe entre modificar un dato en el DOM y modificarlo en el servidor?
+La mayor diferencia se encuentra en el sitio el cual se ve reflejado el cambio.
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+1. ¿Qué operación les resultó más sencilla?
+
+
+2. ¿Cuál fue la más compleja y por qué?
+
+
+3. ¿En qué parte del ciclo sintieron mayor dificultad: en la comunicación con la API o
+en la manipulación del DOM?
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+=== ESTRUCTURA DEL PROYECTO - MODULARIZACIÓN ===
+
+El proyecto se estructura en una arquitectura modular que separa las responsabilidades
+en capas claramente definidas, facilitando el mantenimiento, escalabilidad y 
+testabilidad del código.
+
+================================================================================
+DIRECTORIO: servidor/
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  ARQUITECTURA POR CAPAS                                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │  CAPA DE PRESENTACIÓN (UI)                                         │   │
+│   │  servidor/ui/tareasUi.js                                           │   │
+│   │  → Funciones para manipular el DOM (renderizar, mostrar mensajes)  │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                    ▲                                        │
+│                                    │                                        │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │  CAPA DE SERVICIOS (LÓGICA DE NEGOCIO)                             │   │
+│   │  servidor/services/tareasService.js                                │   │
+│   │  → Coordina llamadas a API y prepara datos para la UI              │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                    ▲                                        │
+│                                    │                                        │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │  CAPA DE API (COMUNICACIÓN HTTP)                                    │   │
+│   │  servidor/api/                                                      │   │
+│   │  → Funciones que realizan las peticiones HTTP al servidor          │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                    ▲                                        │
+│                                    │                                        │
+│   ┌─────────────────────────────────────────────────────────────────────┐   │
+│   │  CAPA DE UTILIDADES (VALIDACIONES)                                  │   │
+│   │  servidor/utils/validaciones.js                                     │   │
+│   │  → Funciones reutilizables para validar datos                      │   │
+│   └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+DESCRIPCIÓN DETALLADA DE CADA MÓDULO
+================================================================================
+
+--- 1. CAPA DE API (servidor/api/) ---
+
+Esta capa es responsable de toda la comunicación con el servidor externo.
+Cada archivo contiene funciones específicas para un método HTTP particular.
+
+ARCHIVO: get.js
+──────────────
+Funcionalidad: Obtener tareas del servidor
+Método HTTP: GET
+
+Funciones exportadas:
+• taskGet()
+  - Descripción: Obtiene todas las tareas del servidor
+  - Retorna: Array de objetos con todas las tareas
+  - Uso interno: Llamada fetch simple sin parámetros adicionales
+
+• taskGetByUser(userId)
+  - Descripción: Filtra las tareas por ID de usuario
+  - Parámetros: userId (string) - Identificador del usuario
+  - Retorna: Array de tareas del usuario especificado
+  - Uso interno: Obtiene todas y filtra en memoria
+
+---
+
+ARCHIVO: post.js
+────────────────
+Funcionalidad: Crear nuevas tareas en el servidor
+Método HTTP: POST
+
+Funciones exportadas:
+• taskPost(titulo, descripcion, userId)
+  - Descripción: Envía una nueva tarea al servidor
+  - Parámetros:
+    - titulo (string): Título de la tarea
+    - descripcion (string): Descripción de la tarea
+    - userId (string): ID del usuario creador
+  - Retorna: Objeto con la tarea creada (incluye ID generado)
+  - Headers: Content-Type: application/json
+  - Body: Objeto JSON con los datos de la tarea
+
+---
+
+ARCHIVO: patch.js
+─────────────────
+Funcionalidad: Actualizar parcialmente una tarea existente
+Método HTTP: PATCH
+
+Funciones exportadas:
+• taskPatch(id, titulo, descripcion, userId)
+  - Descripción: Actualiza campos específicos de una tarea
+  - Parámetros:
+    - id (string): Identificador de la tarea a actualizar
+    - titulo (string): Nuevo título
+    - descripcion (string): Nueva descripción
+    - userId (string): Nuevo ID de usuario
+  - Retorna: Objeto con la tarea actualizada
+  - Uso: Ideal cuando se actualiza solo algunos campos
+
+---
+
+ARCHIVO: delete.js
+──────────────────
+Funcionalidad: Eliminar una tarea del servidor
+Método HTTP: DELETE
+
+Funciones exportadas:
+• taskDelete(id)
+  - Descripción: Elimina una tarea por su identificador
+  - Parámetros: id (string) - Identificador de la tarea
+  - Retorna: true si se eliminó correctamente
+  - Throw Error: Si la respuesta no es exitosa
+
+---
+
+ARCHIVO: index.js
+─────────────────
+Funcionalidad: Punto central de exportación de la capa API
+Descripción: Re-exporta todas las funciones de los demás archivos
+             para un acceso unificado y limpio
+
+exports:
+  - taskPost, taskGet, taskGetByUser, taskPatch, taskDelete
+
+---
+
+--- 2. CAPA DE SERVICIOS (servidor/services/) ---
+
+Esta capa actúa como intermediario entre la API y la UI. Contiene la lógica
+de negocio y prepara los datos para su presentación.
+
+ARCHIVO: tareasService.js
+─────────────────────────
+Funcionalidad: Coordinación de operaciones y lógica de negocio
+
+Funciones exportadas:
+• crearTarea(titulo, descripcion, userId)
+  - Descripción: Crea una nueva tarea
+  - Retorna: La tarea creada
+
+• obtenerTodasTareas()
+  - Descripción: Obtiene todas las tareas disponibles
+  - Retorna: Array completo de tareas
+
+• obtenerTareasPorUsuario(userId)
+  - Descripción: Obtiene tareas de un usuario específico
+  - Retorna: Array de tareas del usuario (últimas 5, orden inverso)
+  - Lógica: Filtra por userId y toma las últimas 5
+
+• eliminarTarea(id)
+  - Descripción: Elimina una tarea por su ID
+  - Retorna: true si fue exitoso
+
+• actualizarTarea(id, titulo, descripcion, userId)
+  - Descripción: Actualiza una tarea existente
+  - Retorna: La tarea actualizada
+
+---
+
+--- 3. CAPA DE UI (servidor/ui/) ---
+
+Esta capa es responsable de toda la manipulación del DOM. Contiene funciones
+para renderizar elementos, mostrar mensajes y gestionar la interacción visual.
+
+ARCHIVO: tareasUi.js
+────────────────────
+Funcionalidad: Manipulación del DOM y presentación visual
+
+Funciones exportadas:
+• renderizarTareas(tareas, container)
+  - Descripción: Renderiza el array de tareas en el contenedor HTML
+  - Parámetros:
+    - tareas (Array): Array de objetos tarea
+    - container (HTMLElement): Elemento donde renderizar
+  - Comportamiento: Crea tarjetas con título, descripción y botones
+
+• limpiarMensajes()
+  - Descripción: Oculta todos los mensajes de error y éxito
+  - Limpia clases de error de los campos del formulario
+
+• mostrarError(message)
+  - Descripción: Muestra un mensaje de error global
+  - Parámetros: message (string)
+
+• mostrarErrorBusqueda(message)
+  - Descripción: Muestra error en el área de búsqueda de usuario
+  - Parámetros: message (string)
+
+• mostrarExito(message)
+  - Descripción: Muestra mensaje de éxito temporal (5 segundos)
+  - Parámetros: message (string)
+
+• mostrarErroresCampos(errors)
+  - Descripción: Muestra errores de validación en campos específicos
+  - Parámetros: errors (Object) con propiedades titulo, descripcion, usuario
+
+• mostrarModalEliminar()
+  - Descripción: Muestra el modal de confirmación de eliminación
+
+• ocultarModalEliminar()
+  - Descripción: Oculta el modal de confirmación
+
+• prepararFormularioEditar(tarea)
+  - Descripción: Prepara el formulario para editar una tarea
+  - Parámetros: tarea (Object) con datos de la tarea
+  - Comportamiento: Rellena campos y cambia texto del botón
+
+• resetearFormulario()
+  - Descripción: Limpia el formulario a su estado inicial
+  - Restablece el texto del botón a "Guardar Tarea"
+
+---
+
+--- 4. CAPA DE UTILIDADES (servidor/utils/) ---
+
+Esta capa contiene funciones reutilizables que no pertenecen a una capa
+específica, como validaciones de formularios.
+
+ARCHIVO: validaciones.js
+────────────────────────
+Funcionalidad: Validaciones reutilizables del formulario
+
+Funciones exportadas:
+• validarTitulo(titulo)
+  - Descripción: Valida que el título no esté vacío y tenga mínimo 3 caracteres
+  - Retorna: { valido: boolean, error: string | null }
+
+• validarDescripcion(descripcion)
+  - Descripción: Valida que la descripción no esté vacía y tenga mínimo 10 caracteres
+  - Retorna: { valido: boolean, error: string | null }
+
+• validarUsuario(usuario)
+  - Descripción: Valida que el usuario no esté vacío
+  - Retorna: { valido: boolean, error: string | null }
+
+• validarFormulario(titulo, descripcion, usuario)
+  - Descripción: Valida todos los campos del formulario
+  - Retorna: Object con errores encontrados { titulo, descripcion, usuario }
+
+---
+
+--- 5. PUNTO DE ENTRADA (servidor/script.js) ---
+
+Este es el archivo principal que coordina toda la aplicación. Importa las
+funciones de las demás capas y define los event listeners.
+
+Responsabilidades:
+• Importar módulos de servicios, UI y validaciones
+• Definir referencias al DOM
+• Manejar eventos de formulario (submit)
+• Manejar eventos de botones (editar, eliminar, buscar)
+• Coordinar el flujo entre capas
+
+================================================================================
+FLUJO DE DATOS EN LA APLICACIÓN
+================================================================================
+
+┌─────────────┐     ┌─────────────────┐     ┌─────────────┐
+│   USUARIO   │────▶│  script.js      │────▶│  SERVICES   │
+│  (NAVEGADOR)│     │ (Entry Point)  │     │ (Lógica)    │
+└─────────────┘     └─────────────────┘     └──────┬──────┘
+                                                    │
+                          ┌─────────────────────────┼─────────────────────────┐
+                          ▼                         ▼                         ▼
+                   ┌─────────────┐          ┌─────────────┐          ┌─────────────┐
+                   │  API        │          │  UI         │          │  VALIDACIONES│
+                   │ (HTTP)      │◀─────────│ (DOM)       │          │ (Utils)      │
+                   └─────────────┘          └─────────────┘          └─────────────┘
+                          │
+                          ▼
+                   ┌─────────────┐
+                   │  SERVIDOR   │
+                   │  (JSON)     │
+                   └─────────────┘
+
+================================================================================
+MAPA DE ARCHIVOS DEL PROYECTO
+================================================================================
+
+modularizacion/
+│
+├── index.html              # Archivo HTML principal
+├── styles.css              # Estilos CSS
+├── servidor/
+│   ├── db.json             # Base de datos local (JSON Server)
+│   ├── script.js           # Punto de entrada de la aplicación
+│   │
+│   ├── api/                # Capa de comunicación HTTP
+│   │   ├── index.js        # Exportaciones centralizadas
+│   │   ├── get.js          # Peticiones GET
+│   │   ├── post.js         # Peticiones POST
+│   │   ├── patch.js        # Peticiones PATCH
+│   │   └── delete.js       # Peticiones DELETE
+│   │
+│   ├── services/           # Capa de lógica de negocio
+│   │   └── tareasService.js
+│   │
+│   ├── ui/                 # Capa de presentación (DOM)
+│   │   └── tareasUi.js
+│   │
+│   └── utils/              # Utilidades reutilizables
+│       └── validaciones.js
+
+================================================================================
+EXPLICACIÓN DEL FLUJO DE OPERACIONES CRUD
+================================================================================
+
+--- CREATE (Crear tarea) ---
+1. Usuario llena el formulario
+2. script.js captura el evento submit
+3. Se llama a validarFormulario() de utils
+4. Si es válido, se llama a crearTarea() del service
+5. Service llama a taskPost() de API
+6. API envía petición POST al servidor
+7. Service retorna la tarea creada
+8. UI renderiza la nueva tarea en el DOM
+9. Se muestra mensaje de éxito
+
+--- READ (Listar tareas) ---
+1. Usuario ingresa ID de usuario y presiona Enter o "Buscar"
+2. script.js llama a cargarTareasPorUsuario()
+3. Service llama a obtenerTareasPorUsuario()
+4. Service llama a taskGetByUser() de API
+5. API envía petición GET al servidor
+6. Service filtra las últimas 5 tareas
+7. UI renderiza las tareas en el DOM
+
+--- UPDATE (Actualizar tarea) ---
+1. Usuario hace clic en "Editar"
+2. UI prepara el formulario con los datos (prepararFormularioEditar)
+3. Usuario modifica y envía el formulario
+4. script.js detecta modo edición (dataset.editId)
+5. Service llama a actualizarTarea()
+6. Service llama a taskPatch() de API
+7. API envía petición PATCH al servidor
+8. UI actualiza la tarea en el DOM
+9. Se muestra mensaje de éxito
+
+--- DELETE (Eliminar tarea) ---
+1. Usuario hace clic en "Borrar"
+2. UI muestra modal de confirmación
+3. Usuario confirma la eliminación
+4. Service llama a eliminarTarea()
+5. Service llama a taskDelete() de API
+6. API envía petición DELETE al servidor
+7. UI elimina la tarjeta del DOM
+8. Se muestra mensaje de éxito
+
+================================================================================
+PREGUNTAS DE REFLEXIÓN PARA EL DESARROLLO
+================================================================================
+
+1. ¿Qué beneficios aporta la separación por capas en este proyecto?
+
+2. ¿Cómo se comunica cada capa con las demás? ¿Qué ventajas tiene este enfoque?
+
+3. ¿Por qué es importante tener validaciones separadas de la lógica de negocio?
+
+4. ¿Qué ocurriría si modificamos directamente el DOM sin esperar la respuesta
+   del servidor?
+
+5. ¿Cómo se maneja el flujo cuando ocurre un error en alguna de las capas?
+
+6. ¿Qué diferencia hay entre usar PATCH y PUT para actualizar tareas?
+
+7. ¿Por qué es necesario el ID para eliminar o actualizar una tarea?
+
+8. ¿Cómo se sincronizan los datos entre la memoria (tareasActuales) y el
+   servidor?
+
+================================================================================
+NOTAS IMPORTANTES PARA LA IMPLEMENTACIÓN
+================================================================================
+
+• El proyecto utiliza un servidor local con JSON Server (puerto 3000)
+• La URL base de la API es: http://localhost:3000/todos
+• Los IDs de usuarios válidos son: user1, user2, user3, user4, user5
+• Se utiliza JavaScript módulos (ES6 modules) con import/export
+• El formulario permite tanto crear como actualizar tareas
+• La búsqueda de tareas se realiza por usuario
+• Solo se muestran las últimas 5 tareas del usuario seleccionado
