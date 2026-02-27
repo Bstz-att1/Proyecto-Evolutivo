@@ -9,7 +9,8 @@ import {
     obtenerTareasPorUsuario, 
     eliminarTarea, 
     actualizarTarea,
-    filtrarTareasPorEstado
+    filtrarTareasPorEstado,
+    aplicarFiltrosYOrdenar
 } from './services/tareasService.js';
 
 // Importar UI (manipulación del DOM)
@@ -40,6 +41,9 @@ const userSelect = document.getElementById('user-id');
 const userSelectExternal = document.getElementById('user-select');
 const refreshBtn = document.getElementById('refresh-btn');
 const estadoFilter = document.getElementById('estado-filter');
+const tituloFilter = document.getElementById('titulo-filter');
+const sortBySelect = document.getElementById('sort-by');
+const sortDirBtn = document.getElementById('sort-dir');
 
 // Elementos del modal de eliminación
 const deleteModal = document.getElementById('delete-modal');
@@ -51,6 +55,9 @@ let tareasActuales = [];
 let deleteTaskId = null;
 let deleteEventTarget = null;
 let estadoActual = '';
+let tituloActual = '';
+let sortBy = 'fecha';
+let sortDir = 'desc';
 
 // ========================
 // SINCRONIZAR CAMPOS DE USUARIO
@@ -85,8 +92,16 @@ async function cargarTareasPorUsuario() {
             estadoActual = '';
         }
 
-        // Usar UI para renderizar
-        renderizarTareas(tareasActuales, tasksContainer);
+        // Reset filtros adicionales
+        if (tituloFilter) tituloFilter.value = '';
+        tituloActual = '';
+        if (sortBySelect) sortBySelect.value = 'fecha';
+        sortBy = 'fecha';
+        if (sortDirBtn) sortDirBtn.textContent = 'Desc';
+        sortDir = 'desc';
+
+        // Renderizar aplicando filtros/ordenamiento (si hay)
+        aplicarFiltrosYRender();
 
     } catch (error) {
         console.error(error);
@@ -131,9 +146,45 @@ if (refreshBtn) {
 if (estadoFilter) {
     estadoFilter.addEventListener("change", (e) => {
         estadoActual = e.target.value;
-        const tareasFiltradas = filtrarTareasPorEstado(tareasActuales, estadoActual);
-        renderizarTareas(tareasFiltradas, tasksContainer);
+        aplicarFiltrosYRender();
     });
+}
+
+// Filtrado por título (input)
+if (tituloFilter) {
+    tituloFilter.addEventListener('input', (e) => {
+        tituloActual = e.target.value;
+        aplicarFiltrosYRender();
+    });
+}
+
+// Ordenamiento
+if (sortBySelect) {
+    sortBySelect.addEventListener('change', (e) => {
+        sortBy = e.target.value;
+        aplicarFiltrosYRender();
+    });
+}
+
+if (sortDirBtn) {
+    sortDirBtn.addEventListener('click', () => {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        sortDirBtn.textContent = sortDir === 'asc' ? 'Asc' : 'Desc';
+        aplicarFiltrosYRender();
+    });
+}
+
+// Función que aplica filtros+orden y renderiza
+function aplicarFiltrosYRender() {
+    const opciones = {
+        titulo: tituloActual,
+        estado: estadoActual,
+        sortBy: sortBy,
+        sortDir: sortDir
+    };
+
+    const resultado = aplicarFiltrosYOrdenar(tareasActuales, opciones);
+    renderizarTareas(resultado, tasksContainer);
 }
 
 // ========================
@@ -273,8 +324,7 @@ async function handleCreateTask() {
         tareasActuales.unshift(nueva);
 
         // Usar UI para renderizar (aplicando filtro si está activo)
-        const tareasFiltradas = filtrarTareasPorEstado(tareasActuales, estadoActual);
-        renderizarTareas(tareasFiltradas, tasksContainer);
+        aplicarFiltrosYRender();
 
         // Mostrar mensaje de éxito
         mostrarExito('✅ Tarea registrada exitosamente.');
@@ -317,9 +367,8 @@ async function manejarActualizacion(editId) {
             tareasActuales[index].userId = usuario;
         }
 
-        // Usar UI para renderizar (aplicando filtro si está activo)
-        const tareasFiltradas = filtrarTareasPorEstado(tareasActuales, estadoActual);
-        renderizarTareas(tareasFiltradas, tasksContainer);
+        // Usar UI para renderizar aplicando filtros y orden
+        aplicarFiltrosYRender();
 
         // Mostrar mensaje de éxito
         mostrarExito('✅ Tarea actualizada correctamente.');

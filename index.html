@@ -27,6 +27,21 @@
     </select>
   </div>
 
+  <div class="filter-titulo task-form">
+    <label for="titulo-filter" class="form-label">Buscar por Título:</label>
+    <input type="text" id="titulo-filter" class="form-input" placeholder="Ingrese texto para filtrar por título">
+  </div>
+
+  <div class="sort-controls task-form">
+    <label for="sort-by" class="form-label">Ordenar por:</label>
+    <select id="sort-by" class="form-input">
+      <option value="fecha">Fecha de creación</option>
+      <option value="titulo">Nombre de la tarea</option>
+      <option value="estado">Estado</option>
+    </select>
+    <button type="button" id="sort-dir" class="btn">Desc</button>
+  </div>
+
   <form id="task-form" class="task-form">
     <!-- Contenedor para mensajes de error globales -->
     <div id="global-error" class="message error-message" style="display: none;"></div>

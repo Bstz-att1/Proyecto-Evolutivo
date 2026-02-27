@@ -10,7 +10,8 @@ async function taskPost(titulo, descripcion, userId) {
             titulo: titulo,
             descripcion: descripcion,
             userId: userId,
-            estado: 'pendiente'
+                estado: 'pendiente',
+                createdAt: new Date().toISOString()
         })
 
     });

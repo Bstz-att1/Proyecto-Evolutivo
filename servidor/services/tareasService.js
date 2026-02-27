@@ -53,6 +53,57 @@ export function filtrarTareasPorEstado(tareas, estado) {
 }
 
 /**
+ * Aplica filtros combinados y ordena el array de tareas.
+ * @param {Array} tareas - Array de tareas a procesar
+ * @param {Object} options - Opciones: { titulo, estado, sortBy, sortDir }
+ * @returns {Array} - Array filtrado y ordenado
+ */
+export function aplicarFiltrosYOrdenar(tareas, options = {}) {
+    const { titulo = '', estado = '', sortBy = 'fecha', sortDir = 'desc' } = options;
+
+    let resultado = Array.isArray(tareas) ? [...tareas] : [];
+
+    // Filtrar por título (coincidencia parcial, case-insensitive)
+    if (titulo && titulo.trim() !== '') {
+        const q = titulo.trim().toLowerCase();
+        resultado = resultado.filter(t => (t.titulo || '').toLowerCase().includes(q));
+    }
+
+    // Filtrar por estado
+    if (estado && estado.trim() !== '') {
+        resultado = resultado.filter(t => t.estado === estado);
+    }
+
+    // Ordenar
+    const dir = sortDir === 'asc' ? 1 : -1;
+
+    resultado.sort((a, b) => {
+        if (sortBy === 'titulo') {
+            const A = (a.titulo || '').toLowerCase();
+            const B = (b.titulo || '').toLowerCase();
+            if (A < B) return -1 * dir;
+            if (A > B) return 1 * dir;
+            return 0;
+        }
+
+        if (sortBy === 'estado') {
+            const A = (a.estado || '').toLowerCase();
+            const B = (b.estado || '').toLowerCase();
+            if (A < B) return -1 * dir;
+            if (A > B) return 1 * dir;
+            return 0;
+        }
+
+        // Por defecto: fecha de creación
+        const aTime = a.createdAt ? Date.parse(a.createdAt) : 0;
+        const bTime = b.createdAt ? Date.parse(b.createdAt) : 0;
+        return (aTime - bTime) * dir;
+    });
+
+    return resultado;
+}
+
+/**
  * Elimina una tarea
  * @param {string} id - ID de la tarea a eliminar
  * @returns {Promise<boolean>} - true si se eliminó correctamente
