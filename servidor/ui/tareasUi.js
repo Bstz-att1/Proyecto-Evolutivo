@@ -13,8 +13,6 @@ let elementos = null;
 function obtenerElementos() {
     if (!elementos) {
         elementos = {
-            globalError: document.getElementById('global-error'),
-            successMessage: document.getElementById('success-message'),
             errorTitulo: document.getElementById('error-titulo'),
             errorDescripcion: document.getElementById('error-descripcion'),
             errorUsuario: document.getElementById('error-usuario'),
@@ -66,20 +64,10 @@ export function renderizarTareas(tareas, container) {
 }
 
 /**
- * Limpia todos los mensajes de error y éxito
+ * Limpia los errores de validación de la UI
  */
-export function limpiarMensajes() {
+export function limpiarErroresUI() {
     const elementos = obtenerElementos();
-    
-    if (elementos.globalError) {
-        elementos.globalError.style.display = 'none';
-        elementos.globalError.textContent = '';
-    }
-    
-    if (elementos.successMessage) {
-        elementos.successMessage.style.display = 'none';
-        elementos.successMessage.textContent = '';
-    }
     
     if (elementos.errorTitulo) {
         elementos.errorTitulo.textContent = '';
@@ -110,23 +98,6 @@ export function limpiarMensajes() {
 }
 
 /**
- * Muestra un mensaje de error global
- * @param {string} message - Mensaje de error a mostrar
- */
-export function mostrarError(message) {
-    const elementos = obtenerElementos();
-    
-    if (elementos.globalError) {
-        elementos.globalError.textContent = message;
-        elementos.globalError.style.display = 'block';
-    }
-    
-    if (elementos.successMessage) {
-        elementos.successMessage.style.display = 'none';
-    }
-}
-
-/**
  * Muestra un mensaje de error en el área de búsqueda de usuario
  * @param {string} message - Mensaje de error a mostrar
  */
@@ -140,34 +111,6 @@ export function mostrarErrorBusqueda(message) {
     if (elementos.userSelectExternal) {
         elementos.userSelectExternal.classList.add('error');
     }
-    
-    if (elementos.globalError) {
-        elementos.globalError.style.display = 'none';
-    }
-}
-
-/**
- * Muestra un mensaje de éxito
- * @param {string} message - Mensaje de éxito a mostrar
- */
-export function mostrarExito(message) {
-    const elementos = obtenerElementos();
-    
-    if (elementos.successMessage) {
-        elementos.successMessage.textContent = message;
-        elementos.successMessage.style.display = 'block';
-    }
-    
-    if (elementos.globalError) {
-        elementos.globalError.style.display = 'none';
-    }
-    
-    // Ocultar después de 5 segundos
-    setTimeout(() => {
-        if (elementos.successMessage) {
-            elementos.successMessage.style.display = 'none';
-        }
-    }, 5000);
 }
 
 /**
@@ -205,9 +148,6 @@ export function mostrarErroresCampos(errors) {
     }
     
     // Si hay errores, mostrar mensaje global
-    if (Object.keys(errors).length > 0) {
-        mostrarError('Por favor, corrija los errores indicados en el formulario.');
-    }
 }
 
 /**
@@ -279,4 +219,22 @@ export function resetearFormulario() {
         submitBtn.textContent = "Guardar Tarea";
         delete submitBtn.dataset.editId;
     }
+}
+
+/**
+ * Genera la descarga de un archivo (RF04 - UI Logic)
+ * @param {string} contenido - Contenido del archivo
+ * @param {string} nombreArchivo - Nombre del archivo a descargar
+ * @param {string} tipoMime - Tipo MIME del archivo
+ */
+export function descargarArchivo(contenido, nombreArchivo, tipoMime) {
+    const blob = new Blob([contenido], { type: tipoMime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }

@@ -88,7 +88,7 @@ export function aplicarFiltrosYOrdenar(tareas, options = {}) {
 
         if (sortBy === 'estado') {
             const A = (a.estado || '').toLowerCase();
-            const B = (b.estado || '').toLowerCase();
+            const B = (b.estado || '').toLowerCase(); 
             if (A < B) return -1 * dir;
             if (A > B) return 1 * dir;
             return 0;
@@ -122,4 +122,13 @@ export async function eliminarTarea(id) {
  */
 export async function actualizarTarea(id, titulo, descripcion, userId) {
     return await taskPatch(id, titulo, descripcion, userId);
+}
+
+/**
+ * Prepara los datos de las tareas para exportación (RF04)
+ * @param {Array} tareas - Lista de tareas a exportar
+ * @returns {string} - Cadena JSON formateada
+ */
+export function prepararDatosExportacion(tareas) {
+    return JSON.stringify(tareas, null, 2);
 }

@@ -10,22 +10,25 @@ import {
     eliminarTarea, 
     actualizarTarea,
     filtrarTareasPorEstado,
-    aplicarFiltrosYOrdenar
+    aplicarFiltrosYOrdenar,
+    prepararDatosExportacion
 } from './services/tareasService.js';
 
 // Importar UI (manipulación del DOM)
 import { 
     renderizarTareas, 
-    mostrarError, 
     mostrarErrorBusqueda,
-    mostrarExito, 
-    limpiarMensajes, 
+    limpiarErroresUI, 
     mostrarErroresCampos,
     mostrarModalEliminar,
     ocultarModalEliminar,
     prepararFormularioEditar,
-    resetearFormulario
+    resetearFormulario,
+    descargarArchivo
 } from './ui/tareasUi.js';
+
+// Importar Notificaciones (RF03)
+import { mostrarExito, mostrarError, mostrarInfo } from './ui/notificacionesUi.js';
 
 // Importar validaciones (utilidades)
 import { validarFormulario } from './utils/validaciones.js';
@@ -174,6 +177,28 @@ if (sortDirBtn) {
     });
 }
 
+// ========================
+// EXPORTAR TAREAS (RF04)
+// ========================
+const exportBtn = document.createElement('button');
+exportBtn.textContent = '📥 Exportar JSON';
+exportBtn.className = 'btn'; // Reutilizar clase de botón existente
+exportBtn.style.marginBottom = '15px';
+
+if (tasksContainer) {
+    tasksContainer.parentNode.insertBefore(exportBtn, tasksContainer);
+    
+    exportBtn.addEventListener('click', () => {
+        if (!tareasActuales || tareasActuales.length === 0) {
+            mostrarInfo('ℹ️ No hay tareas visibles para exportar.');
+            return;
+        }
+        const datosJson = prepararDatosExportacion(tareasActuales);
+        descargarArchivo(datosJson, 'tareas_exportadas.json', 'application/json');
+        mostrarExito('✅ Tareas exportadas correctamente.');
+    });
+}
+
 // Función que aplica filtros+orden y renderiza
 function aplicarFiltrosYRender() {
     const opciones = {
@@ -287,7 +312,7 @@ if (taskForm) {
         const editId = submitBtn?.dataset.editId;
 
         // Limpiar mensajes anteriores
-        limpiarMensajes();
+        limpiarErroresUI();
 
         // Si hay un ID de edición, actualizar (PATCH)
         if (editId) {
@@ -311,6 +336,7 @@ async function handleCreateTask() {
     
     // Si hay errores de validación, mostrarlos
     if (Object.keys(validationErrors).length > 0) {
+        mostrarError('Por favor, corrija los errores en el formulario.');
         mostrarErroresCampos(validationErrors);
         return;
     }
