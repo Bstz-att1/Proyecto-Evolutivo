@@ -1,6 +1,6 @@
-const API_URL = "http://localhost:3000/todos";
+import { API_URL } from '../core/config.js';
 
-async function taskPatch(id, titulo, descripcion, userId) {
+export async function taskPatch(id, titulo, descripcion, userId) {
     const response = await fetch(`${API_URL}/${id}`, {
         method: 'PATCH',
         headers: {
@@ -19,5 +19,3 @@ async function taskPatch(id, titulo, descripcion, userId) {
 
     return await response.json();
 }
-
-export { taskPatch };

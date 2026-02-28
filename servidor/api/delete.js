@@ -1,6 +1,6 @@
-const API_URL = "http://localhost:3000/todos";
+import { API_URL } from '../core/config.js';
 
-async function taskDelete(id) {
+export async function taskDelete(id) {
 
     const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE"
@@ -12,5 +12,3 @@ async function taskDelete(id) {
 
     return true;
 }
-
-export { taskDelete };

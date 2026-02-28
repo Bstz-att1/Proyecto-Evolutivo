@@ -1,6 +1,6 @@
-const API_URL = "http://localhost:3000/todos";
+import { API_URL } from '../core/config.js';
 
-async function taskGet() {
+export async function taskGet() {
     const response = await fetch(API_URL);
 
     if (!response.ok) {
@@ -10,7 +10,7 @@ async function taskGet() {
     return await response.json();
 }
 
-async function taskGetByUser(userId) {
+export async function taskGetByUser(userId) {
     const response = await fetch(API_URL);
 
     if (!response.ok) {
@@ -22,5 +22,3 @@ async function taskGetByUser(userId) {
     // Filtrar tareas por userId
     return todas.filter(tarea => tarea.userId === userId);
 }
-
-export { taskGet, taskGetByUser };

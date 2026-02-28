@@ -1,4 +1,4 @@
-PROBLEMA IDENTIFICADO:
+1. PROBLEMA IDENTIFICADO:
 --------------------------------------------------------------------------------
 El archivo servidor/script.js concentraba múltiples responsabilidades:
 - Gestión del estado de la aplicación (variables: tareasActuales, deleteTaskId, etc.)
@@ -59,6 +59,7 @@ servidor/
 │
 ├── core/                   # NUEVO: Capa de controlador de aplicación
 │   └── appController.js   # Estado + Lógica de flujo
+│   └── config.js              # NUEVO: Configuración centralizada
 │
 ├── services/               # Capa de servicios (lógica de negocio)
 │   └── tareasService.js
@@ -82,3 +83,61 @@ BENEFICIOS DE LA REFACTORIZACIÓN:
 5. El archivo script.js ahora solo coordina eventos y delega al controlador
 
 ================================================================================
+
+
+2. NUEVOS CAMBIOS - ELIMINACIÓN DE VARIABLES GLOBALES Y USO CORRECTO DE ES MODULES
+================================================================================
+
+PROBLEMA IDENTIFICADO:
+--------------------------------------------------------------------------------
+Se detectaron múltiples variables globales (const API_URL) definidas en varios 
+archivos de la capa API, violando el requisito de "no usar variables globales":
+
+- servidor/api/get.js: const API_URL = "http://localhost:3000/todos";
+- servidor/api/post.js: const API_URL = "http://localhost:3000/todos";
+- servidor/api/delete.js: const API_URL = "http://localhost:3000/todos";
+- servidor/api/patch.js: const API_URL = "http://localhost:3000/todos";
+
+Además, los exports no eran consistentes (algunos usaban export al final del archivo).
+
+--------------------------------------------------------------------------------
+SOLUCIÓN IMPLEMENTADA:
+--------------------------------------------------------------------------------
+
+1. CREACIÓN DE NUEVO MÓDULO DE CONFIGURACIÓN: servidor/config.js
+   ----------------------------------------------------------------------------
+   - Responsabilidad: Centralizar configuración global de la aplicación
+   - Contiene:
+     * API_URL exportado como constante
+     * APP_CONFIG con configuración adicional (timeout, límites, etc.)
+   - RAZÓN: Eliminar variable global duplicada en múltiples archivos
+
+2. ACTUALIZACIÓN DE: servidor/api/get.js
+   ----------------------------------------------------------------------------
+   - Eliminado: const API_URL = "http://localhost:3000/todos"; (variable global)
+   - Agregado: import { API_URL } from '../config.js';
+   - Mejorado: Export en línea (export async function)
+
+3. ACTUALIZACIÓN DE: servidor/api/post.js
+   ----------------------------------------------------------------------------
+   - Eliminado: const API_URL = "http://localhost:3000/todos"; (variable global)
+   - Agregado: import { API_URL } from '../config.js';
+   - Mejorado: Export en línea (export async function)
+   - Corregido: Identación del objeto body
+
+4. ACTUALIZACIÓN DE: servidor/api/delete.js
+   ----------------------------------------------------------------------------
+   - Eliminado: const API_URL = "http://localhost:3000/todos"; (variable global)
+   - Agregado: import { API_URL } from '../config.js';
+   - Mejorado: Export en línea (export async function)
+
+5. ACTUALIZACIÓN DE: servidor/api/patch.js
+   ----------------------------------------------------------------------------
+   - Eliminado: const API_URL = "http://localhost:3000/todos"; (variable global)
+   - Agregado: import { API_URL } from '../config.js';
+   - Mejorado: Export en línea (export async function)
+
+6. ACTUALIZACIÓN DE: servidor/api/index.js
+   ----------------------------------------------------------------------------
+   - Sin cambios necesarios - ya tenía los exports correctos
+   - Archivo ya utilizaba correctamente export {...} from

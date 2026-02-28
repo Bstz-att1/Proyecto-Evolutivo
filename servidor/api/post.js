@@ -1,6 +1,6 @@
-const API_URL = "http://localhost:3000/todos";
+import { API_URL } from '../core/config.js';
 
-async function taskPost(titulo, descripcion, userId) {
+export async function taskPost(titulo, descripcion, userId) {
     const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
@@ -10,13 +10,11 @@ async function taskPost(titulo, descripcion, userId) {
             titulo: titulo,
             descripcion: descripcion,
             userId: userId,
-                estado: 'pendiente',
-                createdAt: new Date().toISOString()
+            estado: 'pendiente',
+            createdAt: new Date().toISOString()
         })
 
     });
 
     return await response.json();
 }
-
-export { taskPost };
