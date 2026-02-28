@@ -71,6 +71,24 @@ body {
   margin-top: 10px;
 }
 
+/* Filtro de estado */
+.filter-estado {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filter-estado .form-label {
+  margin-bottom: 0;
+  min-width: fit-content;
+}
+
+.filter-estado select {
+  flex: 1;
+  max-width: 250px;
+}
+
 /* BOTON GUARDAR */
 
 .btn.submit {
@@ -143,6 +161,38 @@ body {
   margin-bottom: 12px;
   color: #5f6b77;
   line-height: 1.4;
+}
+
+/* ESTADO */
+.task-estado {
+  margin-bottom: 12px;
+}
+
+.estado-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.estado-pendiente {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.estado-en-progreso {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.estado-completada {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
 }
 
 /* BOTONES */

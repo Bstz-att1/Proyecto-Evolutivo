@@ -9,7 +9,9 @@ async function taskPost(titulo, descripcion, userId) {
         body: JSON.stringify({
             titulo: titulo,
             descripcion: descripcion,
-            userId: userId
+            userId: userId,
+                estado: 'pendiente',
+                createdAt: new Date().toISOString()
         })
 
     });

@@ -10,12 +10,36 @@
 <body>
   <h1 class="app-title">Gestor de Tareas</h1>
 
-  <!-- Selector de usuario -->
   <div class="user-selector task-form">
     <label for="user-select" class="form-label">Ingrese su ID de usuario:</label>
     <input type="text" id="user-select" class="form-input" placeholder="Ej: user1, user2, user3">
     <span id="error-usuario-busqueda" class="field-error"></span>
     <button type="button" id="refresh-btn" class="btn refresh">Buscar Tareas</button>
+  </div>
+
+  <div class="filter-estado task-form">
+    <label for="estado-filter" class="form-label">Filtrar por Estado:</label>
+    <select id="estado-filter" class="form-input">
+      <option value="">Todos</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="en progreso">En Progreso</option>
+      <option value="completada">Completada</option>
+    </select>
+  </div>
+
+  <div class="filter-titulo task-form">
+    <label for="titulo-filter" class="form-label">Buscar por Título:</label>
+    <input type="text" id="titulo-filter" class="form-input" placeholder="Ingrese texto para filtrar por título">
+  </div>
+
+  <div class="sort-controls task-form">
+    <label for="sort-by" class="form-label">Ordenar por:</label>
+    <select id="sort-by" class="form-input">
+      <option value="fecha">Fecha de creación</option>
+      <option value="titulo">Nombre de la tarea</option>
+      <option value="estado">Estado</option>
+    </select>
+    <button type="button" id="sort-dir" class="btn">Desc</button>
   </div>
 
   <form id="task-form" class="task-form">
@@ -46,11 +70,9 @@
     <button type="submit" class="btn submit">Guardar Tarea</button>
   </form>
 
-  <!-- === AREA PARA SUBIR TAREAS === -->
   <section id="task-list" class="task-list">
     <h2 class="task-list-title">Lista de Tareas</h2>
     <div class="tasks-container">
-      <!-- Aquí se mostrarán las tareas dinámicamente -->
     </div>
   </section>
 
@@ -65,7 +87,7 @@
       </div>
     </div>
   </div>
-
+    
   <script type="module" src="servidor/script.js"></script>
 </body>
 

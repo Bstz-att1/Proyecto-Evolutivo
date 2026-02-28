@@ -8,22 +8,27 @@ import {
     crearTarea, 
     obtenerTareasPorUsuario, 
     eliminarTarea, 
-    actualizarTarea 
+    actualizarTarea,
+    filtrarTareasPorEstado,
+    aplicarFiltrosYOrdenar,
+    prepararDatosExportacion
 } from './services/tareasService.js';
 
 // Importar UI (manipulación del DOM)
 import { 
     renderizarTareas, 
-    mostrarError, 
     mostrarErrorBusqueda,
-    mostrarExito, 
-    limpiarMensajes, 
+    limpiarErroresUI, 
     mostrarErroresCampos,
     mostrarModalEliminar,
     ocultarModalEliminar,
     prepararFormularioEditar,
-    resetearFormulario
+    resetearFormulario,
+    descargarArchivo
 } from './ui/tareasUi.js';
+
+// Importar Notificaciones (RF03)
+import { mostrarExito, mostrarError, mostrarInfo } from './ui/notificacionesUi.js';
 
 // Importar validaciones (utilidades)
 import { validarFormulario } from './utils/validaciones.js';
@@ -38,6 +43,10 @@ const tasksContainer = document.querySelector(".tasks-container");
 const userSelect = document.getElementById('user-id');
 const userSelectExternal = document.getElementById('user-select');
 const refreshBtn = document.getElementById('refresh-btn');
+const estadoFilter = document.getElementById('estado-filter');
+const tituloFilter = document.getElementById('titulo-filter');
+const sortBySelect = document.getElementById('sort-by');
+const sortDirBtn = document.getElementById('sort-dir');
 
 // Elementos del modal de eliminación
 const deleteModal = document.getElementById('delete-modal');
@@ -48,6 +57,10 @@ const cancelDeleteBtn = document.getElementById('cancel-delete');
 let tareasActuales = [];
 let deleteTaskId = null;
 let deleteEventTarget = null;
+let estadoActual = '';
+let tituloActual = '';
+let sortBy = 'fecha';
+let sortDir = 'desc';
 
 // ========================
 // SINCRONIZAR CAMPOS DE USUARIO
@@ -76,8 +89,22 @@ async function cargarTareasPorUsuario() {
         // Usar el servicio para obtener tareas del usuario
         tareasActuales = await obtenerTareasPorUsuario(usuarioSeleccionado);
 
-        // Usar UI para renderizar
-        renderizarTareas(tareasActuales, tasksContainer);
+        // Resetear filtro de estado
+        if (estadoFilter) {
+            estadoFilter.value = '';
+            estadoActual = '';
+        }
+
+        // Reset filtros adicionales
+        if (tituloFilter) tituloFilter.value = '';
+        tituloActual = '';
+        if (sortBySelect) sortBySelect.value = 'fecha';
+        sortBy = 'fecha';
+        if (sortDirBtn) sortDirBtn.textContent = 'Desc';
+        sortDir = 'desc';
+
+        // Renderizar aplicando filtros/ordenamiento (si hay)
+        aplicarFiltrosYRender();
 
     } catch (error) {
         console.error(error);
@@ -114,6 +141,75 @@ if (refreshBtn) {
     refreshBtn.addEventListener("click", async () => {
         await cargarTareasPorUsuario();
     });
+}
+
+// ========================
+// FILTRO POR ESTADO
+// ========================
+if (estadoFilter) {
+    estadoFilter.addEventListener("change", (e) => {
+        estadoActual = e.target.value;
+        aplicarFiltrosYRender();
+    });
+}
+
+// Filtrado por título (input)
+if (tituloFilter) {
+    tituloFilter.addEventListener('input', (e) => {
+        tituloActual = e.target.value;
+        aplicarFiltrosYRender();
+    });
+}
+
+// Ordenamiento
+if (sortBySelect) {
+    sortBySelect.addEventListener('change', (e) => {
+        sortBy = e.target.value;
+        aplicarFiltrosYRender();
+    });
+}
+
+if (sortDirBtn) {
+    sortDirBtn.addEventListener('click', () => {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        sortDirBtn.textContent = sortDir === 'asc' ? 'Asc' : 'Desc';
+        aplicarFiltrosYRender();
+    });
+}
+
+// ========================
+// EXPORTAR TAREAS (RF04)
+// ========================
+const exportBtn = document.createElement('button');
+exportBtn.textContent = '📥 Exportar JSON';
+exportBtn.className = 'btn'; // Reutilizar clase de botón existente
+exportBtn.style.marginBottom = '15px';
+
+if (tasksContainer) {
+    tasksContainer.parentNode.insertBefore(exportBtn, tasksContainer);
+    
+    exportBtn.addEventListener('click', () => {
+        if (!tareasActuales || tareasActuales.length === 0) {
+            mostrarInfo('ℹ️ No hay tareas visibles para exportar.');
+            return;
+        }
+        const datosJson = prepararDatosExportacion(tareasActuales);
+        descargarArchivo(datosJson, 'tareas_exportadas.json', 'application/json');
+        mostrarExito('✅ Tareas exportadas correctamente.');
+    });
+}
+
+// Función que aplica filtros+orden y renderiza
+function aplicarFiltrosYRender() {
+    const opciones = {
+        titulo: tituloActual,
+        estado: estadoActual,
+        sortBy: sortBy,
+        sortDir: sortDir
+    };
+
+    const resultado = aplicarFiltrosYOrdenar(tareasActuales, opciones);
+    renderizarTareas(resultado, tasksContainer);
 }
 
 // ========================
@@ -216,7 +312,7 @@ if (taskForm) {
         const editId = submitBtn?.dataset.editId;
 
         // Limpiar mensajes anteriores
-        limpiarMensajes();
+        limpiarErroresUI();
 
         // Si hay un ID de edición, actualizar (PATCH)
         if (editId) {
@@ -240,6 +336,7 @@ async function handleCreateTask() {
     
     // Si hay errores de validación, mostrarlos
     if (Object.keys(validationErrors).length > 0) {
+        mostrarError('Por favor, corrija los errores en el formulario.');
         mostrarErroresCampos(validationErrors);
         return;
     }
@@ -252,8 +349,8 @@ async function handleCreateTask() {
         // Insertar arriba en memoria
         tareasActuales.unshift(nueva);
 
-        // Usar UI para renderizar
-        renderizarTareas(tareasActuales, tasksContainer);
+        // Usar UI para renderizar (aplicando filtro si está activo)
+        aplicarFiltrosYRender();
 
         // Mostrar mensaje de éxito
         mostrarExito('✅ Tarea registrada exitosamente.');
@@ -296,8 +393,8 @@ async function manejarActualizacion(editId) {
             tareasActuales[index].userId = usuario;
         }
 
-        // Usar UI para renderizar
-        renderizarTareas(tareasActuales, tasksContainer);
+        // Usar UI para renderizar aplicando filtros y orden
+        aplicarFiltrosYRender();
 
         // Mostrar mensaje de éxito
         mostrarExito('✅ Tarea actualizada correctamente.');
