@@ -1,0 +1,84 @@
+PROBLEMA IDENTIFICADO:
+--------------------------------------------------------------------------------
+El archivo servidor/script.js concentraba múltiples responsabilidades:
+- Gestión del estado de la aplicación (variables: tareasActuales, deleteTaskId, etc.)
+- Lógica de flujo de la aplicación (funciones: cargarTareasPorUsuario, aplicarFiltrosYRender, executeDelete, handleCreateTask, manejarActualizacion)
+- Manipulación del DOM (event listeners)
+- Coordinación de servicios, UI y notificaciones
+
+Esto violaba el principio de "cada nueva funcionalidad en módulo independiente sin romper la arquitectura existente".
+
+--------------------------------------------------------------------------------
+SOLUCIÓN IMPLEMENTADA:
+--------------------------------------------------------------------------------
+
+1. CREACIÓN DE NUEVO MÓDULO: servidor/core/appController.js
+   ----------------------------------------------------------------------------
+   - Responsabilidad: Gestionar el estado de la aplicación y la lógica de flujo
+   - Contiene:
+     * Estado de la aplicación (objeto con tareasActuales, deleteTaskId, etc.)
+     * Getters del estado
+     * Funciones de carga de datos (cargarTareasPorUsuario)
+     * Funciones de filtrado y renderizado (aplicarFiltrosYRender, setEstadoFilter, etc.)
+     * Funciones de manejo de tareas (prepararEdicionTarea, prepararEliminacionTarea, executeDelete)
+     * Funciones de creación y actualización (crearNuevaTarea, actualizarTareaExistente)
+     * Funciones de exportación (exportarTareas)
+   
+   - Importa dependencias necesarias:
+     * Servicios: tareasService.js
+     * UI: tareasUi.js
+     * Notificaciones: notificacionesUi.js
+     * Utilidades: validaciones.js
+
+2. REFACTORIZACIÓN DE: servidor/script.js
+   ----------------------------------------------------------------------------
+   - Nueva responsabilidad: Punto de entrada y coordinador de eventos
+   - Contiene:
+     * Referencias al DOM
+     * Configuración de event listeners (delegados al controlador)
+     * Sincronización de campos de usuario
+     * Carga inicial
+     * Solo DELega las acciones al appController
+   
+   - Ya NO contiene:
+     * Variables de estado globales
+     * Funciones de lógica de negocio
+     * Lógica de filtrado u ordenamiento
+
+--------------------------------------------------------------------------------
+ESTRUCTURA FINAL ARQUITECTÓNICA:
+--------------------------------------------------------------------------------
+
+servidor/
+├── api/                    # Capa de comunicación HTTP
+│   ├── index.js
+│   ├── post.js
+│   ├── get.js
+│   ├── patch.js
+│   └── delete.js
+│
+├── core/                   # NUEVO: Capa de controlador de aplicación
+│   └── appController.js   # Estado + Lógica de flujo
+│
+├── services/               # Capa de servicios (lógica de negocio)
+│   └── tareasService.js
+│
+├── ui/                     # Capa de presentación (DOM)
+│   ├── tareasUi.js
+│   └── notificacionesUi.js
+│
+├── utils/                  # Capa de utilidades
+│   └── validaciones.js
+│
+└── script.js              # Punto de entrada (coordinador)
+
+--------------------------------------------------------------------------------
+BENEFICIOS DE LA REFACTORIZACIÓN:
+--------------------------------------------------------------------------------
+1. Separación clara de responsabilidades por capas
+2. Mayor mantenibilidad del código
+3. Facilita Testing Unitario por模块
+4. Cumple con el requisito de "no concentrar lógica nueva en el archivo principal"
+5. El archivo script.js ahora solo coordina eventos y delega al controlador
+
+================================================================================
