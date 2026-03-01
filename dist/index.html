@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CRUD - Apropiación</title>
+  <script type="module" crossorigin src="/assets/index-D7QqIKxr.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Ckwtpf10.css">
+</head>
+
+<body>
+  <h1 class="app-title">Gestor de Tareas</h1>
+
+  <div class="user-selector task-form">
+    <label for="user-select" class="form-label">Ingrese su ID de usuario:</label>
+    <input type="text" id="user-select" class="form-input" placeholder="Ej: user1, user2, user3">
+    <span id="error-usuario-busqueda" class="field-error"></span>
+    <button type="button" id="refresh-btn" class="btn refresh">Buscar Tareas</button>
+  </div>
+
+  <div class="filter-estado task-form">
+    <label for="estado-filter" class="form-label">Filtrar por Estado:</label>
+    <select id="estado-filter" class="form-input">
+      <option value="">Todos</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="en progreso">En Progreso</option>
+      <option value="completada">Completada</option>
+    </select>
+  </div>
+
+  <div class="filter-titulo task-form">
+    <label for="titulo-filter" class="form-label">Buscar por Título:</label>
+    <input type="text" id="titulo-filter" class="form-input" placeholder="Ingrese texto para filtrar por título">
+  </div>
+
+  <div class="sort-controls task-form">
+    <label for="sort-by" class="form-label">Ordenar por:</label>
+    <select id="sort-by" class="form-input">
+      <option value="titulo">Nombre de la tarea</option>
+      <option value="estado">Estado</option>
+    </select>
+    <button type="button" id="sort-dir" class="btn refresh">Filtrar</button>
+  </div>
+
+  <form id="task-form" class="task-form">
+    <!-- Contenedor para mensajes de error globales -->
+    <div id="global-error" class="message error-message" style="display: none;"></div>
+    
+    <!-- Contenedor para mensajes de éxito -->
+    <div id="success-message" class="message success-message" style="display: none;"></div>
+
+    <div class="form-group">
+      <label for="titulo" class="form-label">Título</label>
+      <input type="text" id="titulo" name="titulo" class="form-input" required>
+      <span id="error-titulo" class="field-error"></span>
+    </div>
+
+    <div class="form-group">
+      <label for="descripcion" class="form-label">Descripción</label>
+      <textarea id="descripcion" name="descripcion" rows="4" class="form-textarea" required></textarea>
+      <span id="error-descripcion" class="field-error"></span>
+    </div>
+
+    <div class="form-group">
+      <label for="user-id" class="form-label">Usuario</label>
+      <input type="text" id="user-id" name="user-id" class="form-input" placeholder="Ej: user1, user2, user3" required>
+      <span id="error-usuario" class="field-error"></span>
+    </div>
+
+    <button type="submit" class="btn submit">Guardar Tarea</button>
+  </form>
+
+  <section id="task-list" class="task-list">
+    <h2 class="task-list-title">Lista de Tareas</h2>
+    <div class="tasks-container">
+    </div>
+  </section>
+
+  <!-- === MODAL DE CONFIRMACIÓN PARA ELIMINAR === -->
+  <div id="delete-modal" class="modal">
+    <div class="modal-content">
+      <h3 class="modal-title">Confirmar Eliminación</h3>
+      <p class="modal-message">¿Está seguro de que desea eliminar esta tarea?</p>
+      <div class="modal-buttons">
+        <button type="button" id="confirm-delete" class="btn danger">Eliminar</button>
+        <button type="button" id="cancel-delete" class="btn secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
