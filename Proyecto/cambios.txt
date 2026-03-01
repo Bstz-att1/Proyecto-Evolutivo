@@ -141,3 +141,56 @@ SOLUCIÓN IMPLEMENTADA:
    ----------------------------------------------------------------------------
    - Sin cambios necesarios - ya tenía los exports correctos
    - Archivo ya utilizaba correctamente export {...} from
+
+================================================================================
+
+
+3. CORRECCIÓN DE RUTA DE IMPORT - ELIMINACIÓN DE DEPENDENCIA CIRCULAR POTENCIAL
+================================================================================
+
+PROBLEMA IDENTIFICADO:
+--------------------------------------------------------------------------------
+Se detectó un problema de mayúsculas/minúsculas en la ruta de importación del 
+archivo servidor/services/tareasService.js:
+
+- Incorrecto: import { ... } from '../API/index.js';  (MAYÚSCULAS 'API')
+- Correcto:   import { ... } from '../api/index.js';  (minúsculas 'api')
+
+En sistemas operativos sensibles a mayúsculas (Linux, macOS), esto puede causar:
+- Error de "Module not found" al intentar cargar el módulo
+- Posible generación de dependencias circulares si se intenta resolver de forma incorrecta
+
+El archivo de la carpeta API está en: servidor/api/ (todo en minúsculas)
+
+--------------------------------------------------------------------------------
+SOLUCIÓN IMPLEMENTADA:
+--------------------------------------------------------------------------------
+
+1. CORRECCIÓN DE: servidor/services/tareasService.js
+   ----------------------------------------------------------------------------
+   - Cambiado: import { ... } from '../API/index.js';
+   - Por:      import { ... } from '../api/index.js';
+   
+   RAZÓN: Corregir la ruta del módulo para que coincida con la estructura real 
+   de directorios y evitar errores de carga de módulos que podrían causar 
+   comportamientos inesperados o dependencias circulares.
+
+--------------------------------------------------------------------------------
+VERIFICACIÓN DE DEPENDENCIAS ACTUAL (NO EXISTEN DEPENDENCIAS CIRCULARES):
+--------------------------------------------------------------------------------
+El flujo de dependencias actual es:
+
+  script.js
+     ↓
+  appController.js
+     ↓              ↓              ↓              ↓
+  tareasService  tareasUi    notificacionesUi  validaciones
+     ↓              
+  api/index.js    
+     ↓     ↓     ↓     ↓
+   get  post  patch  delete
+     ↓
+  config.js
+
+Este flujo es unidireccional (DAG - Directed Acyclic Graph) y NO tiene 
+dependencias circulares.

@@ -9,7 +9,7 @@ import {
     taskGetByUser, 
     taskDelete, 
     taskPatch 
-} from '../API/index.js';
+} from '../api/index.js';
 
 /**
  * Crea una nueva tarea
