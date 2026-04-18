@@ -222,3 +222,249 @@ Se añadió transformación de usuarios API -> UI para mantener consistencia con
 - Manejo explícito de respuestas envueltas y de `insertId` en operaciones de creación.
 - Compatibilidad de naming (snake_case <-> camelCase/español) sin romper componentes de interfaz.
 - Consistencia de tipos de ID para preservar filtros y comparaciones en UI.
+
+---
+
+## Actualización - Frontend completo (API + Services + Controller + UI + script + index + styles) 
+
+### 12) `src/api/tasks.api.js` (ajustes de integración backend real)
+Se consolidó el consumo de endpoints de tareas para backend Express/MySQL, contemplando respuestas envueltas y estructuras variables en `data`.
+
+**Cambios:**
+- Se añadió helper `extractData(json)` para centralizar lectura de `json.data`.
+- `taskGet()`:
+  - tolera respuestas con `data` como array directo.
+  - soporta estructuras anidadas (`data.tasks`, `data.rows`).
+- `taskGetByUser(userId)`:
+  - filtrado robusto por `user_id` o `userId`.
+  - comparación estable mediante `String(...)`.
+- `taskPost(...)`, `taskPut(...)`, `taskPatch(...)`:
+  - payload alineado al backend:
+    - `title`
+    - `description`
+    - `status`
+    - `user_id` (cast a `Number` cuando aplica)
+    - `created_by` (en creación/reemplazo)
+  - `headers` JSON explícitos.
+  - manejo de fallback cuando backend no retorna objeto completo.
+- `taskPost(...)`:
+  - soporte explícito para `insertId`/`id` de respuestas de creación.
+
+**Resultado:**
+- Operaciones CRUD de tareas consistentes contra backend real, sin romper el contrato esperado por servicios/UI.
+
+---
+
+### 13) `src/api/users.api.js` (ajustes de payload y normalización de rol)
+Se ajustó la capa API de usuarios para alinear los campos enviados/recibidos con el backend actual y el modelo de UI.
+
+**Cambios:**
+- Helper `extractData(json)` para leer `json.data`.
+- `userGet()` y `userGetById()` consumen respuesta envuelta.
+- `userPost(...)` y `userPut(...)`:
+  - payload unificado: `{ name, email, document, role }`.
+  - normalización de rol antes de enviar:
+    - `administrador -> admin`
+    - `usuario -> user`
+  - headers JSON.
+- `userPost(...)`:
+  - soporte de retorno por `insertId` cuando aplica.
+- `userPatch(...)` y `userDelete(...)`:
+  - se mantiene contrato REST con manejo consistente de errores.
+
+**Resultado:**
+- Capa API de usuarios compatible con backend Node/MySQL y con los campos usados por el frontend actual.
+
+---
+
+### 14) `src/services/tasksService.js` (mapeo y normalización API -> UI)
+Se reforzó la capa de servicios de tareas para desacoplar completamente la UI de la forma de datos del backend.
+
+**Cambios:**
+- `crearTarea(...)` usa `taskPost(...)` con estado por defecto `'pendiente'`.
+- `obtenerTodasTareas()` y `obtenerTareasPorUsuario()` aplican mapeo centralizado.
+- `actualizarTarea(...)` y `actualizarParcialTarea(...)` retornan datos normalizados.
+- `mapApiTaskToUiTask(task)`:
+  - mapeo flexible de nombres:
+    - `title -> titulo`
+    - `description -> descripcion`
+    - `status -> estado`
+    - `user_id -> userId`
+    - `task_id -> id` (fallback)
+    - `assigned_to/assignedTo -> asignadoA`
+    - `created_by/createdBy -> created_by`
+    - `created_at/updated_at -> createdAt/updatedAt`
+  - normalización de tipos (`id`, `userId`, `asignadoA` como `String`).
+- Se mantuvo utilitario de filtros y orden (`aplicarFiltrosYOrdenar`) y exportación JSON.
+
+**Resultado:**
+- Servicios de tareas estables ante cambios de naming y estructura del backend, preservando compatibilidad con la UI.
+
+---
+
+### 15) `src/services/usersService.js` (mapeo y normalización API -> UI)
+Se actualizó el servicio de usuarios para transformar de forma uniforme la información del backend al formato consumido por interfaz.
+
+**Cambios:**
+- `obtenerTodosUsuarios()`, `obtenerUsuarioPorId()`, `crearUsuario()`, `reemplazarUsuario()`, `actualizarParcialUsuario()` retornan datos mapeados.
+- `mapApiUserToUiUser(user)`:
+  - mapeo flexible:
+    - `name -> nombre`
+    - `role -> rol`
+    - `document/documento -> document`
+    - `user_id -> id` (fallback)
+  - normalización de `id` a `String`.
+- `normalizeRol(...)`:
+  - unifica variantes (`admin`, `administrator`, `administrador`) a `administrador`.
+  - unifica (`user`, `usuario`) a `usuario`.
+
+**Resultado:**
+- Modelo de usuario homogéneo para UI, sin dependencia directa de cómo el backend nombre columnas/campos.
+
+---
+
+### 16) `src/core/appController.js` (orquestación integral tareas + usuarios)
+Se consolidó el controlador como capa de coordinación entre servicios, UI y notificaciones para tareas y usuarios.
+
+**Cambios:**
+- Estado centralizado:
+  - tareas, usuarios, filtros, orden, IDs de eliminación.
+- Flujo de tareas:
+  - carga por usuario (`cargarTareasPorUsuario`).
+  - filtros y orden (`setEstadoFilter`, `setTituloFilter`, `setSortBy`, `toggleSortDir`).
+  - creación, edición, eliminación con feedback de toasts.
+  - exportación JSON (`exportarTareas`).
+- Flujo de usuarios:
+  - carga completa (`cargarUsuarios`) con skeleton.
+  - filtros por búsqueda y rol (`setUsersSearch`, `setUsersRoleFilter`, `aplicarFiltrosUsuariosYRender`).
+  - creación/edición/eliminación (`crearUsuarioNuevo`, `actualizarUsuarioExistente`, `eliminarUsuarioConfirmado`).
+- KPIs:
+  - `actualizarKpis()` para tareas visibles y usuarios registrados.
+- Mensajería:
+  - integración de `showSuccess`, `showError`, `showInfo`.
+
+**Resultado:**
+- Controlador robusto para ambos dominios (tasks/users), con estado consistente y mejor experiencia de interacción.
+
+---
+
+### 17) UI modules (`src/ui/tasksUi.js`, `src/ui/usersUi.js`, `src/ui/notificationsUi.js`)
+Se completó la capa UI modular para renderizado, validación visual, modales y notificaciones toast reutilizables.
+
+**Cambios en `tasksUi.js`:**
+- Cache de elementos DOM (`getElements`) para reducir consultas repetidas.
+- `renderTasks(...)`:
+  - tarjetas con metadatos (`created_by`, asignación, fechas formateadas).
+  - badges de estado dinámicos.
+  - estado vacío amigable.
+- Manejo de errores visuales:
+  - `clearUiErrors()`, `showSearchError()`, `showFieldErrors()`.
+- Gestión de modal y formulario:
+  - `showDeleteModal()`, `hideDeleteModal()`.
+  - `prepareEditForm(...)`, `resetForm()`.
+- Exportación:
+  - `downloadFile(...)` para descarga de JSON.
+
+**Cambios en `usersUi.js`:**
+- `renderUsers(...)`:
+  - tabla de usuarios con acciones editar/borrar.
+  - estado vacío cuando no hay datos.
+- utilidades:
+  - `syncUserSelectors()`
+  - `showUserSearchError()`
+  - `clearUserSearchError()`.
+
+**Cambios en `notificationsUi.js`:**
+- Contenedor flotante de toasts creado dinámicamente.
+- `showNotification(...)` con estilos por tipo (`success`, `error`, `info`) y animación.
+- API pública:
+  - `showSuccess(...)`
+  - `showError(...)`
+  - `showInfo(...)`.
+
+**Resultado:**
+- UI desacoplada por módulos, con renderizado consistente, feedback visual claro y mejor mantenibilidad.
+
+---
+
+### 18) `src/script.js` (wiring completo de la SPA)
+Se fortaleció el punto de entrada para conectar eventos del DOM con el controlador y habilitar flujo completo de la aplicación.
+
+**Cambios:**
+- Importación de acciones para tareas y usuarios desde `appController`.
+- Navegación entre vistas (`dashboard`, `tasks`, `users`) con sidebar.
+- Inicialización:
+  - carga de usuarios al `DOMContentLoaded`.
+  - carga inicial de tareas si hay usuario seleccionado.
+- Sincronización de inputs de usuario:
+  - `#user-select` (externo) y `#user-id` (formulario).
+- Eventos de tareas:
+  - filtros, orden, recarga, submit crear/editar, editar/eliminar por delegación.
+- Botón dinámico de exportación JSON insertado sobre contenedor de tareas.
+- Eventos de usuarios:
+  - búsqueda + filtro por rol.
+  - modal crear/editar.
+  - confirmación de eliminación con modal dedicado.
+
+**Resultado:**
+- Integración de eventos completa y coherente para operación diaria de tareas y usuarios.
+
+---
+
+### 19) `index.html` (estructura de vistas y modales)
+Se amplió la estructura HTML para soportar dashboard, gestión de tareas y gestión de usuarios en una misma SPA.
+
+**Cambios:**
+- Layout principal con:
+  - sidebar y navegación por vistas.
+  - secciones `dashboard-view`, `tasks-view`, `users-view`.
+- Dashboard:
+  - tarjetas KPI para tareas y usuarios.
+- Tareas:
+  - panel de controles (usuario, estado, búsqueda, orden).
+  - formulario de tarea con validación visual.
+  - contenedor de listado + skeleton.
+- Usuarios:
+  - toolbar de búsqueda/rol + botón nuevo usuario.
+  - contenedor de tabla + skeleton.
+- Modales:
+  - confirmación de eliminación de tarea.
+  - modal de creación/edición de usuario (incluye `documento`).
+  - confirmación de eliminación de usuario.
+
+**Resultado:**
+- Base estructural completa para soportar todos los flujos de frontend en una sola interfaz modular.
+
+---
+
+### 20) `styles.css` (sistema visual y componentes UI)
+Se consolidó una hoja de estilos integral para layout, componentes y estados visuales de la SPA.
+
+**Cambios:**
+- Sistema de variables CSS (`:root`) para paleta y tokens visuales.
+- Layout responsive:
+  - grid con sidebar + content.
+  - adaptación en `@media` para pantallas menores.
+- Estilos de componentes:
+  - paneles, formularios, botones, tarjetas de tarea, tabla de usuarios.
+- Estados de tarea:
+  - badges por estado (`pendiente`, `en progreso`, `completada`).
+- Modales:
+  - overlay, contenido, botones.
+- Skeleton loaders:
+  - grids/tablas con animación `loading`.
+- Estados de error:
+  - `field-error` y resaltado de inputs `.error`.
+- Dashboard:
+  - tarjetas KPI.
+
+**Resultado:**
+- Interfaz visual consistente, moderna y responsive para todos los módulos del frontend.
+
+---
+
+## Resumen de impacto Frontend (actualización completa)
+- Documentación unificada del alcance completo de cambios en **API, Services, Controller, UI, script, HTML y estilos**.
+- Integración estable con backend Node.js/Express + MySQL, incluyendo normalización de respuestas y campos.
+- Arquitectura frontend más modular y mantenible (separación clara por capas).
+- Mejoras funcionales y UX: vistas por dominio, CRUD completo de usuarios/tareas, notificaciones toast, modales de confirmación, filtros, ordenamientos, exportación y KPIs.
