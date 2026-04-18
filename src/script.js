@@ -1,13 +1,8 @@
 /**
- * Punto de entrada de la aplicación
- * Coordina el flujo general y registra eventos principales
- * delega la lógica al controlador de aplicación
+ * Punto de entrada de la SPA
  */
-
-// Importar controlador de aplicación (lógica de estado y flujo)
-import { 
+import {
     cargarTareasPorUsuario,
-    aplicarFiltrosYRender,
     setEstadoFilter,
     setTituloFilter,
     setSortBy,
@@ -18,12 +13,18 @@ import {
     cancelarEliminacion,
     crearNuevaTarea,
     actualizarTareaExistente,
-    exportarTareas
+    exportarTareas,
+    cargarUsuarios,
+    setUsersSearch,
+    setUsersRoleFilter,
+    aplicarFiltrosUsuariosYRender,
+    crearUsuarioNuevo,
+    prepararEdicionUsuario,
+    actualizarUsuarioExistente,
+    prepararEliminacionUsuario,
+    eliminarUsuarioConfirmado
 } from './core/appController.js';
 
-// ========================
-// REFERENCIAS AL DOM
-// ========================
 const taskForm = document.getElementById('task-form');
 const taskTitle = document.getElementById('titulo');
 const taskDescription = document.getElementById('descripcion');
@@ -36,36 +37,80 @@ const sortBySelect = document.getElementById('sort-by');
 const sortDirBtn = document.getElementById('sort-dir');
 const tasksContainer = document.querySelector(".tasks-container");
 
-// Elementos del modal de eliminación
 const deleteModal = document.getElementById('delete-modal');
 const confirmDeleteBtn = document.getElementById('confirm-delete');
 const cancelDeleteBtn = document.getElementById('cancel-delete');
 
-// ========================
-// SINCRONIZAR CAMPOS DE USUARIO
-// ========================
-if (userSelectExternal && userSelect) {
-    userSelectExternal.addEventListener('input', () => {
-        userSelect.value = userSelectExternal.value;
-    });
-    userSelect.addEventListener('input', () => {
-        userSelectExternal.value = userSelect.value;
-    });
+const navLinks = document.querySelectorAll('.nav-link');
+const views = document.querySelectorAll('.view');
+
+const usersSearch = document.getElementById('users-search');
+const usersRoleFilter = document.getElementById('users-role-filter');
+const usersContainer = document.getElementById('users-container');
+const newUserBtn = document.getElementById('new-user-btn');
+
+const userModal = document.getElementById('user-modal');
+const userForm = document.getElementById('user-form');
+const closeUserModalBtn = document.getElementById('close-user-modal');
+const userModalTitle = document.getElementById('user-modal-title');
+const userNombreInput = document.getElementById('user-nombre');
+const userEmailInput = document.getElementById('user-email');
+const userRolInput = document.getElementById('user-rol');
+const userDocumentoInput = document.getElementById('user-documento');
+
+const deleteUserModal = document.getElementById('delete-user-modal');
+const confirmDeleteUserBtn = document.getElementById('confirm-delete-user');
+const cancelDeleteUserBtn = document.getElementById('cancel-delete-user');
+
+let userEditingId = null;
+
+function showView(viewId) {
+    views.forEach((v) => v.classList.toggle('active', v.id === viewId));
+    navLinks.forEach((btn) => btn.classList.toggle('active', btn.dataset.view === viewId));
 }
 
-// ========================
-// CARGA INICIAL
-// ========================
-document.addEventListener("DOMContentLoaded", async () => {
-    // Cargar tareas si hay un usuario seleccionado por defecto
-    if (userSelect.value) {
-        await cargarTareasPorUsuario(userSelect.value);
+function openUserModal(user = null) {
+    if (!userModal || !userForm) return;
+    if (user) {
+        userEditingId = user.id;
+        userModalTitle.textContent = 'Editar Usuario';
+        userNombreInput.value = user.nombre || '';
+        userEmailInput.value = user.email || '';
+        userRolInput.value = user.rol || 'usuario';
+        userDocumentoInput.value = user.document || user.documento || '';
+    } else {
+        userEditingId = null;
+        userModalTitle.textContent = 'Nuevo Usuario';
+        userForm.reset();
     }
+    userModal.classList.add('show');
+}
+
+function closeUserModal() {
+    userModal?.classList.remove('show');
+    userEditingId = null;
+    userForm?.reset();
+}
+
+if (userSelectExternal && userSelect) {
+    userSelectExternal.addEventListener('input', () => { userSelect.value = userSelectExternal.value; });
+    userSelect.addEventListener('input', () => { userSelectExternal.value = userSelect.value; });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    showView('dashboard-view');
+    await cargarUsuarios();
+    if (userSelect?.value) await cargarTareasPorUsuario(userSelect.value);
 });
 
-// ========================
-// CAMBIO DE USUARIO (Enter en el input)
-// ========================
+navLinks.forEach((btn) => {
+    btn.addEventListener('click', async () => {
+        const target = btn.dataset.view;
+        showView(target);
+        if (target === 'users-view') await cargarUsuarios();
+    });
+});
+
 if (userSelectExternal) {
     userSelectExternal.addEventListener("keypress", async (e) => {
         if (e.key === "Enter") {
@@ -74,122 +119,117 @@ if (userSelectExternal) {
         }
     });
 }
+if (refreshBtn) refreshBtn.addEventListener("click", async () => { await cargarTareasPorUsuario(userSelect.value); });
+if (estadoFilter) estadoFilter.addEventListener("change", (e) => setEstadoFilter(e.target.value));
+if (tituloFilter) tituloFilter.addEventListener('input', (e) => setTituloFilter(e.target.value));
+if (sortBySelect) sortBySelect.addEventListener('change', (e) => setSortBy(e.target.value));
+if (sortDirBtn) sortDirBtn.addEventListener('click', () => toggleSortDir());
 
-// ========================
-// BOTÓN ACTUALIZAR
-// ========================
-if (refreshBtn) {
-    refreshBtn.addEventListener("click", async () => {
-        await cargarTareasPorUsuario(userSelect.value);
-    });
-}
-
-// ========================
-// FILTROS Y ORDENAMIENTO
-// ========================
-
-// Filtro por estado
-if (estadoFilter) {
-    estadoFilter.addEventListener("change", (e) => {
-        setEstadoFilter(e.target.value);
-    });
-}
-
-// Filtrado por título (input)
-if (tituloFilter) {
-    tituloFilter.addEventListener('input', (e) => {
-        setTituloFilter(e.target.value);
-    });
-}
-
-// Ordenamiento - campo
-if (sortBySelect) {
-    sortBySelect.addEventListener('change', (e) => {
-        setSortBy(e.target.value);
-    });
-}
-
-// Ordenamiento - dirección
-if (sortDirBtn) {
-    sortDirBtn.addEventListener('click', () => {
-        toggleSortDir();
-    });
-}
-
-// ========================
-// EXPORTAR TAREAS (RF04)
-// ========================
 const exportBtn = document.createElement('button');
 exportBtn.textContent = '📥 Exportar JSON';
-exportBtn.className = 'btn'; // Reutilizar clase de botón existente
-exportBtn.style.marginBottom = '15px';
-
+exportBtn.className = 'btn btn-secondary';
 if (tasksContainer) {
     tasksContainer.parentNode.insertBefore(exportBtn, tasksContainer);
-    
-    exportBtn.addEventListener('click', () => {
-        exportarTareas();
-    });
+    exportBtn.addEventListener('click', () => exportarTareas());
 }
 
-// ========================
-// MANEJO DE TAREAS (EDITAR - BORRAR)
-// ========================
 if (tasksContainer) {
     tasksContainer.addEventListener("click", async (e) => {
-        // Manejar botón Editar
-        if (e.target.classList.contains("edit")) {
-            const id = e.target.dataset.id;
-            prepararEdicionTarea(id);
-        }
-
-        // Manejar botón Borrar
-        if (e.target.classList.contains("delete")) {
-            const id = e.target.dataset.id;
-            prepararEliminacionTarea(id, e.target);
-        }
+        if (e.target.classList.contains("edit")) prepararEdicionTarea(e.target.dataset.id);
+        if (e.target.classList.contains("delete")) prepararEliminacionTarea(e.target.dataset.id, e.target);
     });
 }
 
-// ========================
-// EVENT LISTERS DEL MODAL
-// ========================
-if (confirmDeleteBtn) {
-    confirmDeleteBtn.addEventListener('click', executeDelete);
-}
-
-if (cancelDeleteBtn) {
-    cancelDeleteBtn.addEventListener('click', cancelarEliminacion);
-}
-
-// Cerrar modal al hacer clic fuera del contenido
+if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', executeDelete);
+if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', cancelarEliminacion);
 if (deleteModal) {
     deleteModal.addEventListener('click', (e) => {
-        if (e.target === deleteModal) {
-            cancelarEliminacion();
-        }
+        if (e.target === deleteModal) cancelarEliminacion();
     });
 }
 
-// ========================
-// GUARDAR TAREA (CREATE - POST o UPDATE - PATCH)
-// ========================
 if (taskForm) {
     taskForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-
         const submitBtn = taskForm.querySelector(".submit");
         const editId = submitBtn?.dataset.editId;
-
         const titulo = taskTitle.value.trim();
         const descripcion = taskDescription.value.trim();
         const usuario = userSelect.value.trim();
 
-        // Si hay un ID de edición, actualizar (PATCH)
-        if (editId) {
-            await actualizarTareaExistente(editId, titulo, descripcion, usuario);
-        } else {
-            await crearNuevaTarea(titulo, descripcion, usuario);
+        if (editId) await actualizarTareaExistente(editId, titulo, descripcion, usuario);
+        else await crearNuevaTarea(titulo, descripcion, usuario);
+    });
+}
+
+if (usersSearch) {
+    usersSearch.addEventListener('input', async (e) => {
+        setUsersSearch(e.target.value);
+        await aplicarFiltrosUsuariosYRender();
+    });
+}
+if (usersRoleFilter) {
+    usersRoleFilter.addEventListener('change', async (e) => {
+        setUsersRoleFilter(e.target.value);
+        await aplicarFiltrosUsuariosYRender();
+    });
+}
+if (newUserBtn) newUserBtn.addEventListener('click', () => openUserModal());
+if (closeUserModalBtn) closeUserModalBtn.addEventListener('click', closeUserModal);
+if (userModal) {
+    userModal.addEventListener('click', (e) => {
+        if (e.target === userModal) closeUserModal();
+    });
+}
+if (userForm) {
+    userForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nombre = userNombreInput.value.trim();
+        const correo = userEmailInput.value.trim();
+        const rol = userRolInput.value;
+        const documento = userDocumentoInput.value.trim();
+
+        if (userEditingId) await actualizarUsuarioExistente(userEditingId, nombre, correo, documento, rol);
+        else await crearUsuarioNuevo(nombre, correo, documento, rol);
+
+        closeUserModal();
+    });
+}
+
+if (usersContainer) {
+    usersContainer.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.user-edit');
+        const deleteBtn = e.target.closest('.user-delete');
+
+        if (editBtn) {
+            const user = await prepararEdicionUsuario(editBtn.dataset.id);
+            if (user) openUserModal(user);
+        }
+
+        if (deleteBtn) {
+            prepararEliminacionUsuario(deleteBtn.dataset.id);
+            deleteUserModal?.classList.add('show');
+        }
+    });
+}
+
+if (confirmDeleteUserBtn) {
+    confirmDeleteUserBtn.addEventListener('click', async () => {
+        await eliminarUsuarioConfirmado();
+        deleteUserModal?.classList.remove('show');
+    });
+}
+
+if (cancelDeleteUserBtn) {
+    cancelDeleteUserBtn.addEventListener('click', () => {
+        deleteUserModal?.classList.remove('show');
+    });
+}
+
+if (deleteUserModal) {
+    deleteUserModal.addEventListener('click', (e) => {
+        if (e.target === deleteUserModal) {
+            deleteUserModal.classList.remove('show');
         }
     });
 }
