@@ -1,105 +1,135 @@
 # Changelog
 
 ## Objetivo del cambio
-**users** con la misma modularización utilizada en **tasks**, y añadir soporte de método **PUT** para ambos recursos (**tasks** y **users**) para mantener una arquitectura consistente por capas (API + Service).
+Reparar y completar la conexión total de capas (**API -> Services -> UI**) después del renombrado de archivos a inglés, manteniendo el estilo de desarrollo existente y corrigiendo la integración con la estructura real de datos usada por el proyecto.
 
 ---
 
 ## Cambios realizados
 
-### 1) `src/api/users.api.js` (nuevo/implementado)
-Se implementó completamente el módulo API de usuarios siguiendo el patrón de `tasks.api.js` con bloques por método HTTP y documentación JSDoc.
-
-**Métodos agregados:**
-- `userGet()` → GET `/users`
-- `userGetById(id)` → GET `/users/:id`
-- `userPost(name, email, role)` → POST `/users`
-- `userPut(id, name, email, role)` → PUT `/users/:id`
-- `userPatch(id, changes)` → PATCH `/users/:id`
-- `userDelete(id)` → DELETE `/users/:id`
-
-**Resultado:**
-- La capa API para users quedó estandarizada y lista para usarse desde services/UI.
-
----
-
-### 2) `src/api/tasks.api.js` (actualizado)
-Se agregó la implementación faltante del método PUT para tareas.
-
-**Método agregado:**
-- `taskPut(id, titulo, descripcion, status, userId, created_by)` → PUT `/tasks/:id`
-
-**Detalle técnico:**
-- Se envía `Content-Type: application/json`.
-- Se mantiene estructura de payload alineada con el backend actual:
-  - `title`
-  - `description`
-  - `status`
-  - `user_id`
-  - `created_by`
-- Se añadió manejo de error con `throw new Error(...)` cuando la respuesta no es exitosa.
-
----
-
-### 3) `src/api/index.js` (actualizado)
-Se amplió el archivo índice de exportaciones para exponer todos los métodos necesarios de ambos módulos API.
-
-**Tasks exporta ahora:**
-- `taskPost`
-- `taskGet`
-- `taskGetByUser`
-- `taskPut` (nuevo metodo)
-- `taskPatch`
-- `taskDelete`
-
-**Users exporta ahora:**
-- `userGet`
-- `userGetById`
-- `userPost`
-- `userPut`
-- `userPatch`
-- `userDelete`
-
-**Resultado:**
-- Punto único de importación para la capa de servicios.
-
----
-
-### 4) `src/services/usersService.js` (nuevo)
-Se creó el servicio de usuarios, análogo al de tareas, como capa intermedia entre UI y API.
-
-**Funciones agregadas:**
-- `obtenerTodosUsuarios()` → usa `userGet`
-- `obtenerUsuarioPorId(id)` → usa `userGetById`
-- `crearUsuario(nombre, correo, rol = 'usuario')` → usa `userPost`
-- `reemplazarUsuario(id, nombre, correo, rol = 'usuario')` → usa `userPut` 
-- `actualizarParcialUsuario(id, cambios = {})` → usa `userPatch`
-- `eliminarUsuario(id)` → usa `userDelete`
-
-**Resultado:**
-- Users ya cuenta con la misma estructura modular por capas que tasks.
-
----
-
-### 5) `src/services/tasksService.js` (actualizado)
-Se adaptó el servicio para soportar PUT en actualización completa de tareas.
+### 1) `src/core/appController.js` (actualizado)
+Se corrigieron imports y referencias para restablecer la conexión con los módulos renombrados en inglés.
 
 **Cambios:**
-- Importa `taskPut` desde `../api/index.js`.
-- `actualizarTarea(...)` ahora usa **PUT**:
-  - `actualizarTarea(id, titulo, descripcion, userId, status = 'pendiente', created_by = 'usuario')`
-  - Internamente: `taskPut(...)`
-- Se añadió función adicional para mantener PATCH disponible:
-  - `actualizarParcialTarea(id, titulo, descripcion, userId, status)` → usa `taskPatch(...)`
+- Import de service corregido:
+  - `../services/tareasService.js` -> `../services/tasksService.js`
+- Import de UI actualizado:
+  - `../ui/tareasUi.js` -> `../ui/tasksUi.js`
+- Import de notificaciones actualizado:
+  - `../ui/notificacionesUi.js` -> `../ui/notificationsUi.js`
+- Se reemplazaron llamadas de funciones UI/notificaciones por sus equivalentes en inglés:
+  - `renderizarTareas` -> `renderTasks`
+  - `mostrarErrorBusqueda` -> `showSearchError`
+  - `mostrarModalEliminar` -> `showDeleteModal`
+  - `ocultarModalEliminar` -> `hideDeleteModal`
+  - `prepararFormularioEditar` -> `prepareEditForm`
+  - `resetearFormulario` -> `resetForm`
+  - `descargarArchivo` -> `downloadFile`
+  - `mostrarExito`, `mostrarError`, `mostrarInfo` -> `showSuccess`, `showError`, `showInfo`
+- Se corrigieron referencias residuales para evitar errores en tiempo de ejecución (ej. eliminación y reseteo de formulario).
 
 **Resultado:**
-- Actualización completa por PUT y actualización parcial por PATCH disponibles en la capa de servicio.
+- El controlador vuelve a conectar correctamente servicios y UI tras el renombrado.
 
 ---
 
-## Consideraciones de compatibilidad
+### 2) `src/ui/tasksUi.js` (nuevo)
+Se creó el módulo UI de tareas en inglés como reemplazo funcional de `tareasUi.js`, manteniendo la misma lógica y estilo modular.
 
-- La firma de `crearTarea` en `tasksService.js` ya venía con una posible diferencia respecto a `taskPost` (que recibe más argumentos: `status`, `created_by`).  
-  Este cambio no la alteró para evitar impactos no solicitados en controladores/UI existentes.
-- `actualizarTarea` ahora usa PUT con valores por defecto para `status` y `created_by` para reducir ruptura inmediata en llamadas existentes.
-- Se mantuvo `actualizarParcialTarea` para los casos donde se requiera PATCH.
+**Funciones principales:**
+- `renderTasks(...)`
+- `clearUiErrors()`
+- `showSearchError(...)`
+- `showFieldErrors(...)`
+- `showDeleteModal()`
+- `hideDeleteModal()`
+- `prepareEditForm(...)`
+- `resetForm()`
+- `downloadFile(...)`
+
+**Resultado:**
+- Capa UI de tareas alineada con convención de nombres en inglés.
+
+---
+
+### 3) `src/ui/notificationsUi.js` (nuevo)
+Se creó el módulo de notificaciones en inglés como reemplazo de `notificacionesUi.js`, preservando comportamiento y enfoque desacoplado.
+
+**Funciones exportadas:**
+- `showSuccess(...)`
+- `showError(...)`
+- `showInfo(...)`
+
+**Resultado:**
+- Notificaciones compatibles con los nuevos imports del controlador.
+
+---
+
+### 4) `src/ui/usersUi.js` (nuevo)
+Se añadió módulo UI para usuarios, solicitado para mantener consistencia estructural con el módulo de tareas.
+
+**Funciones implementadas:**
+- `renderUsers(...)`
+- `syncUserSelectors()`
+- `showUserSearchError(...)`
+- `clearUserSearchError()`
+
+**Resultado:**
+- Se incorpora capa de UI de users con patrón modular homogéneo.
+
+---
+
+### 5) `src/api/tasks.api.js` (actualizado)
+Se corrigió la integración de endpoints de tareas para alinearse con la fuente de datos actual confirmada por el proyecto.
+
+**Cambios:**
+- Endpoints de tasks normalizados a:
+  - `GET /tasks`
+  - `GET /tasks` + filtrado local por `userId`
+  - `POST /tasks`
+  - `PUT /tasks/:id`
+  - `PATCH /tasks/:id`
+  - `DELETE /tasks/:id`
+- Se conserva payload con campos usados por el frontend/base:
+  - `titulo`
+  - `descripcion`
+  - `estado`
+  - `userId`
+- Filtro por usuario robustecido:
+  - `String(tarea.userId) === String(userId)`
+
+**Resultado:**
+- Se corrige el error de obtención de tareas por desalineación de endpoint/estructura.
+
+---
+
+### 6) `src/services/tasksService.js` (actualizado)
+Se reforzó la capa intermedia para mantener compatibilidad estable entre API y UI.
+
+**Cambios:**
+- `crearTarea(...)` ajustado para invocar correctamente `taskPost(...)` con estado por defecto.
+- Se añadió mapeo centralizado:
+  - `mapApiTaskToUiTask(task)`
+- Se normalizan resultados en:
+  - `obtenerTodasTareas()`
+  - `obtenerTareasPorUsuario()`
+  - `actualizarTarea()`
+  - `actualizarParcialTarea()`
+
+**Resultado:**
+- Se evita ruptura por diferencias de forma entre respuestas de API y consumo de UI.
+
+---
+
+### 7) `src/api/users.api.js` (actualizado)
+Se ajustaron payloads de creación/actualización de usuarios para compatibilidad con el esquema usado por datos del proyecto.
+
+**Cambios:**
+- En `userPost(...)` y `userPut(...)` se envía:
+  - `nombre`
+  - `email`
+  - `rol`
+- Se mantiene el contrato de métodos y estructura de capa API existente.
+
+**Resultado:**
+- Operaciones de escritura de users alineadas con el modelo actual de datos.
