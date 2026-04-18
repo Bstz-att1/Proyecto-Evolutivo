@@ -20,7 +20,8 @@ import {
  * @returns {Promise<Object>} - La tarea creada
  */
 export async function crearTarea(titulo, descripcion, userId) {
-    return await taskPost(titulo, descripcion, userId);
+    const created = await taskPost(titulo, descripcion, 'pendiente', userId, 'usuario');
+    return mapApiTaskToUiTask(created);
 }
 
 /**
@@ -28,7 +29,8 @@ export async function crearTarea(titulo, descripcion, userId) {
  * @returns {Promise<Array>} - Array de todas las tareas
  */
 export async function obtenerTodasTareas() {
-    return await taskGet();
+    const tasks = await taskGet();
+    return tasks.map(mapApiTaskToUiTask);
 }
 
 /**
@@ -38,8 +40,9 @@ export async function obtenerTodasTareas() {
  */
 export async function obtenerTareasPorUsuario(userId) {
     const todas = await taskGetByUser(userId);
+    const mapped = todas.map(mapApiTaskToUiTask);
     // Tomar solo las últimas 5 del servidor
-    return todas.slice(-5).reverse();
+    return mapped.slice(-5).reverse();
 }
 
 /**
@@ -122,7 +125,8 @@ export async function eliminarTarea(id) {
  * @returns {Promise<Object>} - La tarea actualizada
  */
 export async function actualizarTarea(id, titulo, descripcion, userId, status = 'pendiente', created_by = 'usuario') {
-    return await taskPut(id, titulo, descripcion, status, userId, created_by);
+    const updated = await taskPut(id, titulo, descripcion, status, userId, created_by);
+    return mapApiTaskToUiTask(updated);
 }
 
 /**
@@ -135,7 +139,8 @@ export async function actualizarTarea(id, titulo, descripcion, userId, status = 
  * @returns {Promise<Object>} - La tarea actualizada
  */
 export async function actualizarParcialTarea(id, titulo, descripcion, userId, status) {
-    return await taskPatch(id, titulo, descripcion, status, userId);
+    const updated = await taskPatch(id, titulo, descripcion, status, userId);
+    return mapApiTaskToUiTask(updated);
 }
 
 /**
@@ -145,4 +150,19 @@ export async function actualizarParcialTarea(id, titulo, descripcion, userId, st
  */
 export function prepararDatosExportacion(tareas) {
     return JSON.stringify(tareas, null, 2);
+}
+
+/**
+ * Mapea estructura API (db.json) a estructura UI actual.
+ * API: { id, titulo, descripcion, estado, userId }
+ * UI : { id, titulo, descripcion, estado, userId }
+ */
+function mapApiTaskToUiTask(task = {}) {
+    return {
+        id: task.id,
+        titulo: task.titulo ?? task.title ?? '',
+        descripcion: task.descripcion ?? task.description ?? '',
+        estado: task.estado ?? task.status ?? 'pendiente',
+        userId: task.userId ?? task.user_id ?? ''
+    };
 }
