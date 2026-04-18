@@ -17,7 +17,8 @@ import {
  * @returns {Promise<Array>} - Array de usuarios
  */
 export async function obtenerTodosUsuarios() {
-    return await userGet();
+    const users = await userGet();
+    return users.map(mapApiUserToUiUser);
 }
 
 /**
@@ -26,7 +27,8 @@ export async function obtenerTodosUsuarios() {
  * @returns {Promise<Object>} - Usuario encontrado
  */
 export async function obtenerUsuarioPorId(id) {
-    return await userGetById(id);
+    const user = await userGetById(id);
+    return mapApiUserToUiUser(user);
 }
 
 /**
@@ -37,7 +39,8 @@ export async function obtenerUsuarioPorId(id) {
  * @returns {Promise<Object>} - Usuario creado
  */
 export async function crearUsuario(nombre, correo, rol = 'usuario') {
-    return await userPost(nombre, correo, rol);
+    const created = await userPost(nombre, correo, rol);
+    return mapApiUserToUiUser(created);
 }
 
 /**
@@ -49,7 +52,8 @@ export async function crearUsuario(nombre, correo, rol = 'usuario') {
  * @returns {Promise<Object>} - Usuario actualizado
  */
 export async function reemplazarUsuario(id, nombre, correo, rol = 'usuario') {
-    return await userPut(id, nombre, correo, rol);
+    const updated = await userPut(id, nombre, correo, rol);
+    return mapApiUserToUiUser(updated);
 }
 
 /**
@@ -59,7 +63,8 @@ export async function reemplazarUsuario(id, nombre, correo, rol = 'usuario') {
  * @returns {Promise<Object>} - Usuario actualizado
  */
 export async function actualizarParcialUsuario(id, cambios = {}) {
-    return await userPatch(id, cambios);
+    const patched = await userPatch(id, cambios);
+    return mapApiUserToUiUser(patched);
 }
 
 /**
@@ -69,4 +74,14 @@ export async function actualizarParcialUsuario(id, cambios = {}) {
  */
 export async function eliminarUsuario(id) {
     return await userDelete(id);
+}
+
+function mapApiUserToUiUser(user = {}) {
+    const rawId = user.id ?? user.user_id ?? '';
+    return {
+        id: rawId !== '' && rawId != null ? String(rawId) : '',
+        nombre: user.nombre ?? user.name ?? '',
+        email: user.email ?? '',
+        rol: user.rol ?? user.role ?? 'usuario'
+    };
 }
