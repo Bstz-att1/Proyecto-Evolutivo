@@ -76,7 +76,38 @@ export async function taskPost(titulo, descripcion, status, userId, created_by) 
 // ======================================================================
 //                             METHOD | PUT
 // ======================================================================
-// Se deja el espacio con el fin de su implementacion mas adelante.
+/**
+ * Reemplaza completamente una tarea existente.
+ * @param {number|string} id - ID único de la tarea a reemplazar.
+ * @param {string} titulo - Nuevo título.
+ * @param {string} descripcion - Nueva descripción.
+ * @param {string} status - Nuevo estado.
+ * @param {number|string} userId - ID del usuario responsable.
+ * @param {string} created_by - Rol de quien crea/gestiona la tarea.
+ * @returns {Promise<Object>} - La tarea reemplazada.
+ */
+export async function taskPut(id, titulo, descripcion, status, userId, created_by) {
+    const response = await fetch(`${API_URL}/tasks/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            title: titulo,
+            description: descripcion,
+            status: status,
+            user_id: userId,
+            created_by: created_by
+        })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al reemplazar la tarea');
+    }
+
+    return await response.json();
+}
 
 
 // ======================================================================
