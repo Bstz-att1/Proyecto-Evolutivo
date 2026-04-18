@@ -5,14 +5,20 @@
  */
 
 // Importar servicios (lógica intermedia)
-import { 
-    crearTarea, 
-    obtenerTareasPorUsuario, 
-    eliminarTarea, 
+import {
+    crearTarea,
+    obtenerTareasPorUsuario,
+    eliminarTarea,
     actualizarTarea,
     aplicarFiltrosYOrdenar,
     prepararDatosExportacion
 } from '../services/tasksService.js';
+import {
+    obtenerTodosUsuarios,
+    crearUsuario,
+    reemplazarUsuario,
+    eliminarUsuario
+} from '../services/usersService.js';
 
 // Importar UI (manipulación del DOM)
 import { 
@@ -38,12 +44,16 @@ import { validarFormulario } from '../utils/validaciones.js';
 // ========================
 const estado = {
     tareasActuales: [],
+    usuariosActuales: [],
     deleteTaskId: null,
     deleteEventTarget: null,
+    deleteUserId: null,
     estadoActual: '',
     tituloActual: '',
     sortBy: 'fecha',
-    sortDir: 'desc'
+    sortDir: 'desc',
+    usersSearch: '',
+    usersRoleFilter: ''
 };
 
 // ========================
@@ -69,6 +79,10 @@ export function getSortDir() {
     return estado.sortDir;
 }
 
+export function getUsuariosActuales() {
+    return estado.usuariosActuales;
+}
+
 // ========================
 // FUNCIONES DE CARGA DE DATOS
 // ========================
@@ -79,6 +93,9 @@ export function getSortDir() {
  */
 export async function cargarTareasPorUsuario(usuarioSeleccionado) {
     if (!usuarioSeleccionado) {
+        estado.tareasActuales = [];
+        aplicarFiltrosYRender();
+        actualizarKpis();
         showSearchError('Por favor, ingrese un ID de usuario.');
         return;
     }
@@ -143,6 +160,7 @@ export function aplicarFiltrosYRender() {
     
     const tasksContainer = document.querySelector(".tasks-container");
     renderTasks(resultado, tasksContainer);
+    actualizarKpis();
 }
 
 /**
@@ -356,13 +374,107 @@ export async function actualizarTareaExistente(editId, titulo, descripcion, usua
  */
 export function exportarTareas() {
     const tasksContainer = document.querySelector(".tasks-container");
-    
+
     if (!estado.tareasActuales || estado.tareasActuales.length === 0) {
         showInfo('ℹ️ No hay tareas visibles para exportar.');
         return;
     }
-    
+
     const datosJson = prepararDatosExportacion(estado.tareasActuales);
     downloadFile(datosJson, 'tareas_exportadas.json', 'application/json');
     showSuccess('✅ Tareas exportadas correctamente.');
+}
+
+// ========================
+// FUNCIONES DE USUARIOS
+// ========================
+
+export async function cargarUsuarios() {
+    const usersSkeleton = document.getElementById('users-skeleton');
+    if (usersSkeleton) {
+        usersSkeleton.classList.remove('hidden');
+        usersSkeleton.innerHTML = Array.from({ length: 4 }).map(() => '<div class="skeleton-item"></div>').join('');
+    }
+
+    try {
+        estado.usuariosActuales = await obtenerTodosUsuarios();
+    } catch (error) {
+        console.error(error);
+        showError('Error al cargar usuarios');
+        estado.usuariosActuales = [];
+    } finally {
+        if (usersSkeleton) usersSkeleton.classList.add('hidden');
+        aplicarFiltrosUsuariosYRender();
+        actualizarKpis();
+    }
+}
+
+export async function aplicarFiltrosUsuariosYRender() {
+    const container = document.getElementById('users-container');
+    if (!container) return;
+
+    const search = (estado.usersSearch || '').trim().toLowerCase();
+    const role = String(estado.usersRoleFilter || '').trim().toLowerCase();
+
+    const filtrados = (estado.usuariosActuales || []).filter((u) => {
+        const okSearch = !search || (u.nombre || '').toLowerCase().includes(search) || (u.email || '').toLowerCase().includes(search);
+        const userRole = String(u.rol || '').trim().toLowerCase();
+        const okRole = !role || userRole === role;
+        return okSearch && okRole;
+    });
+
+    const { renderUsers } = await import('../ui/usersUi.js');
+    renderUsers(filtrados, container);
+}
+
+export function setUsersSearch(value) {
+    estado.usersSearch = value || '';
+}
+
+export function setUsersRoleFilter(value) {
+    estado.usersRoleFilter = value || '';
+}
+
+export async function crearUsuarioNuevo(nombre, correo, documento, rol) {
+    const nuevo = await crearUsuario(nombre, correo, documento, rol);
+    estado.usuariosActuales.unshift(nuevo);
+    aplicarFiltrosUsuariosYRender();
+    actualizarKpis();
+    showSuccess('Usuario creado');
+}
+
+export async function prepararEdicionUsuario(id) {
+    const user = estado.usuariosActuales.find((u) => String(u.id) === String(id));
+    if (!user) return null;
+    return user;
+}
+
+export async function actualizarUsuarioExistente(id, nombre, correo, documento, rol) {
+    const actualizado = await reemplazarUsuario(id, nombre, correo, documento, rol);
+    const idx = estado.usuariosActuales.findIndex((u) => String(u.id) === String(id));
+    if (idx !== -1) estado.usuariosActuales[idx] = actualizado;
+    aplicarFiltrosUsuariosYRender();
+    actualizarKpis();
+    showSuccess('Usuario actualizado');
+}
+
+export function prepararEliminacionUsuario(id) {
+    estado.deleteUserId = id;
+}
+
+export async function eliminarUsuarioConfirmado() {
+    if (!estado.deleteUserId) return;
+    await eliminarUsuario(estado.deleteUserId);
+    estado.usuariosActuales = estado.usuariosActuales.filter((u) => String(u.id) !== String(estado.deleteUserId));
+    estado.deleteUserId = null;
+    aplicarFiltrosUsuariosYRender();
+    actualizarKpis();
+    showSuccess('Usuario eliminado');
+}
+
+export function actualizarKpis() {
+    const kpiTasks = document.getElementById('kpi-total-tareas');
+    const kpiUsers = document.getElementById('kpi-total-usuarios');
+    if (kpiTasks) kpiTasks.textContent = String((estado.tareasActuales || []).length);
+    if (kpiUsers) kpiUsers.textContent = String((estado.usuariosActuales || []).length);
 }
