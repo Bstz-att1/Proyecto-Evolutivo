@@ -92,14 +92,9 @@ Frontend/
 ├── index.html
 ├── package-lock.json
 ├── package.json
+├── README.md
 ├── styles.css
 ├── vite.config.js
-├── README.md
-├── TODO.md
-├── Proyecto/
-│   ├── cambios.txt
-│   ├── DOCUMENTACION.md
-│   └── Entendimiento.txt
 └── src/
     ├── script.js
     ├── api/
