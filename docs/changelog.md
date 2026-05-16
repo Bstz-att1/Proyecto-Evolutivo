@@ -1125,3 +1125,55 @@ Se documentan de forma explícita los cambios ya implementados y los pendientes 
 
 **Resultado:**
 - Changelog actualizado con transparencia sobre avance real y próximos ajustes para cierre completo.
+
+---
+
+## Actualización - Documentación estructural del proyecto (Backend + Frontend)
+
+### 50) `Frontend/docs/DOCUMENTATION.md` (nuevo)
+Se añadió documentación técnica específica del frontend para facilitar comprensión de arquitectura y responsabilidades por archivo.
+
+**Cambios:**
+- Nuevo documento con:
+  - propósito general del frontend,
+  - estructura por capas (`script`, `core`, `services`, `api`, `ui`, `utils`),
+  - mapa rápido de archivos y parámetros típicos,
+  - resumen de flujo general de ejecución (UI -> controller -> services -> api -> UI).
+- Se documentaron funciones clave y entradas más frecuentes sin sobrecargar detalle.
+
+**Resultado:**
+- Onboarding más claro para entender rápidamente dónde vive cada responsabilidad del frontend.
+
+---
+
+### 51) `Frontend/README.md` (actualizado)
+Se incorporó sección de documentación adicional para mejorar navegabilidad.
+
+**Cambios:**
+- Nueva sección:
+  - **13. Documentación adicional**
+- Enlaces directos agregados:
+  - `docs/DOCUMENTATION.md`
+  - `docs/changelog.md`
+
+**Resultado:**
+- Acceso más directo desde README a documentación funcional y bitácora de cambios del frontend.
+
+---
+
+### 52) Sincronización documental con backend (referencia cruzada)
+Como parte de esta entrega documental, también se actualizaron archivos de backend para mantener consistencia global del repositorio:
+
+**Backend relacionado:**
+- `Backend/docs/DOCUMENTATION.md`:
+  - se añadió sección **Mapa rápido de archivos y parámetros**.
+- `Backend/README.md`:
+  - sección de documentación adicional actualizada con enlaces a:
+    - `docs/DOCUMENTATION.md`
+    - `docs/RBAC.md`
+    - `docs/CHANGELOG.md`
+- `Backend/docs/CHANGELOG.md`:
+  - nuevo registro `v1.6.2` con resumen de mejoras documentales.
+
+**Resultado:**
+- Trazabilidad documental alineada entre frontend y backend en una misma versión de trabajo.
