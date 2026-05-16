@@ -30,3 +30,16 @@ export {
     authRefresh,
     authLogout
 } from './auth.api.js';
+
+// ======================================================================
+//                     EXPORTACIONES | ROLES.API.JS
+// ======================================================================
+export {
+    roleGet,
+    roleGetById,
+    roleGetPermissionsById,
+    rolePost,
+    rolePut,
+    rolePatch,
+    roleDelete
+} from './roles.api.js';

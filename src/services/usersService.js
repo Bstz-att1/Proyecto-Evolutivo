@@ -38,8 +38,8 @@ export async function obtenerUsuarioPorId(id) {
  * @param {string} rol - Rol del usuario
  * @returns {Promise<Object>} - Usuario creado
  */
-export async function crearUsuario(nombre, correo, documento, rol = 'usuario') {
-    const created = await userPost(nombre, correo, documento, rol);
+export async function crearUsuario(nombre, correo, documento, password, rol = 'usuario') {
+    const created = await userPost(nombre, correo, documento, password, rol);
     return mapApiUserToUiUser(created);
 }
 
@@ -51,8 +51,8 @@ export async function crearUsuario(nombre, correo, documento, rol = 'usuario') {
  * @param {string} rol - Rol del usuario
  * @returns {Promise<Object>} - Usuario actualizado
  */
-export async function reemplazarUsuario(id, nombre, correo, documento, rol = 'usuario') {
-    const updated = await userPut(id, nombre, correo, documento, rol);
+export async function reemplazarUsuario(id, nombre, correo, documento, password, rol = 'usuario') {
+    const updated = await userPut(id, nombre, correo, documento, password, rol);
     return mapApiUserToUiUser(updated);
 }
 
@@ -79,8 +79,13 @@ export async function eliminarUsuario(id) {
 function normalizeRol(value) {
     const rol = String(value ?? '').trim().toLowerCase();
     if (['admin', 'administrator', 'administrador'].includes(rol)) return 'administrador';
+    if (['supervisor'].includes(rol)) return 'supervisor';
     if (['user', 'usuario'].includes(rol)) return 'usuario';
     return 'usuario';
+}
+
+function normalizeRawRole(user = {}) {
+    return user.role ?? user.rol ?? user.role_name ?? user.roleName ?? user.role_code ?? '';
 }
 
 function mapApiUserToUiUser(user = {}) {
@@ -90,6 +95,6 @@ function mapApiUserToUiUser(user = {}) {
         nombre: user.nombre ?? user.name ?? '',
         email: user.email ?? '',
         document: user.document ?? user.documento ?? '',
-        rol: normalizeRol(user.rol ?? user.role ?? 'usuario')
+        rol: normalizeRol(normalizeRawRole(user))
     };
 }
