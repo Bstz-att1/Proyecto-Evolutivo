@@ -16,19 +16,40 @@ import {
     exportarTareas,
     cargarUsuarios,
     setUsersSearch,
+    setUsersIdSearch,
     setUsersRoleFilter,
     aplicarFiltrosUsuariosYRender,
     crearUsuarioNuevo,
     prepararEdicionUsuario,
     actualizarUsuarioExistente,
     prepararEliminacionUsuario,
-    eliminarUsuarioConfirmado
+    eliminarUsuarioConfirmado,
+    cargarRoles,
+    setRolesSearch,
+    setRolesIdSearch,
+    aplicarFiltrosRolesYRender,
+    crearRolNuevo,
+    prepararEdicionRol,
+    actualizarRolExistente,
+    prepararEliminacionRol,
+    eliminarRolConfirmado,
+    getRolePermissionsCatalog
 } from './core/appController.js';
 import {
     isAuthenticated,
     loginWithCredentials,
     logoutCurrentSession
 } from './services/authService.js';
+import {
+    canReadRoles,
+    canManageRoles,
+    canCreateUsers,
+    canUpdateUsers,
+    canDeleteUsers,
+    canCreateTasks,
+    canUpdateTasks,
+    canDeleteTasks
+} from './core/permissions.js';
 
 const taskForm = document.getElementById('task-form');
 const taskTitle = document.getElementById('titulo');
@@ -49,6 +70,7 @@ const cancelDeleteBtn = document.getElementById('cancel-delete');
 const navLinks = document.querySelectorAll('.nav-link');
 const views = document.querySelectorAll('.view');
 
+const usersIdSearch = document.getElementById('users-id-search');
 const usersSearch = document.getElementById('users-search');
 const usersRoleFilter = document.getElementById('users-role-filter');
 const usersContainer = document.getElementById('users-container');
@@ -62,12 +84,30 @@ const userNombreInput = document.getElementById('user-nombre');
 const userEmailInput = document.getElementById('user-email');
 const userRolInput = document.getElementById('user-rol');
 const userDocumentoInput = document.getElementById('user-documento');
+const userPasswordInput = document.getElementById('user-password');
 
 const deleteUserModal = document.getElementById('delete-user-modal');
 const confirmDeleteUserBtn = document.getElementById('confirm-delete-user');
 const cancelDeleteUserBtn = document.getElementById('cancel-delete-user');
 
+const rolesNavLink = document.getElementById('roles-nav-link');
+const rolesIdSearch = document.getElementById('roles-id-search');
+const rolesSearch = document.getElementById('roles-search');
+const rolesContainer = document.getElementById('roles-container');
+const newRoleBtn = document.getElementById('new-role-btn');
+const roleModal = document.getElementById('role-modal');
+const roleForm = document.getElementById('role-form');
+const roleModalTitle = document.getElementById('role-modal-title');
+const roleNameInput = document.getElementById('role-name');
+const roleDescriptionInput = document.getElementById('role-description');
+const rolePermissionsInput = document.getElementById('role-permissions');
+const closeRoleModalBtn = document.getElementById('close-role-modal');
+const deleteRoleModal = document.getElementById('delete-role-modal');
+const confirmDeleteRoleBtn = document.getElementById('confirm-delete-role');
+const cancelDeleteRoleBtn = document.getElementById('cancel-delete-role');
+
 let userEditingId = null;
+let roleEditingId = null;
 
 const authView = document.getElementById('auth-view');
 const appShell = document.getElementById('app-shell');
@@ -95,6 +135,31 @@ function showView(viewId) {
     navLinks.forEach((btn) => btn.classList.toggle('active', btn.dataset.view === viewId));
 }
 
+function applyPermissionBasedUi() {
+    if (newUserBtn) newUserBtn.style.display = canCreateUsers() ? '' : 'none';
+    if (taskForm) taskForm.style.display = canCreateTasks() ? '' : 'none';
+
+    const taskListActions = document.getElementById('task-list-actions');
+    if (taskListActions) {
+        taskListActions.style.display = (canDeleteTasks() || canUpdateTasks()) ? '' : '';
+    }
+
+    if (rolesNavLink) {
+        rolesNavLink.style.display = canReadRoles() ? '' : 'none';
+    }
+
+    if (newRoleBtn) {
+        newRoleBtn.style.display = canManageRoles() ? '' : 'none';
+    }
+}
+
+function getFirstAllowedView() {
+    if (canCreateTasks() || canUpdateTasks() || canDeleteTasks()) return 'tasks-view';
+    if (canCreateUsers() || canUpdateUsers() || canDeleteUsers()) return 'users-view';
+    if (canReadRoles()) return 'roles-view';
+    return 'dashboard-view';
+}
+
 function openUserModal(user = null) {
     if (!userModal || !userForm) return;
     if (user) {
@@ -104,10 +169,19 @@ function openUserModal(user = null) {
         userEmailInput.value = user.email || '';
         userRolInput.value = user.rol || 'usuario';
         userDocumentoInput.value = user.document || user.documento || '';
+        if (userPasswordInput) {
+            userPasswordInput.value = '';
+            userPasswordInput.required = false;
+            userPasswordInput.placeholder = 'Dejar vacío para conservar contraseña actual';
+        }
     } else {
         userEditingId = null;
         userModalTitle.textContent = 'Nuevo Usuario';
         userForm.reset();
+        if (userPasswordInput) {
+            userPasswordInput.required = true;
+            userPasswordInput.placeholder = 'Mínimo 6 caracteres';
+        }
     }
     userModal.classList.add('show');
 }
@@ -116,6 +190,10 @@ function closeUserModal() {
     userModal?.classList.remove('show');
     userEditingId = null;
     userForm?.reset();
+    if (userPasswordInput) {
+        userPasswordInput.required = true;
+        userPasswordInput.placeholder = 'Mínimo 6 caracteres';
+    }
 }
 
 if (userSelectExternal && userSelect) {
@@ -130,8 +208,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     showAppView();
-    showView('dashboard-view');
+    applyPermissionBasedUi();
+    showView(getFirstAllowedView());
     await cargarUsuarios();
+    if (canReadRoles()) await cargarRoles();
     if (userSelect?.value) await cargarTareasPorUsuario(userSelect.value);
 });
 
@@ -142,8 +222,13 @@ window.addEventListener('auth:session-expired', () => {
 navLinks.forEach((btn) => {
     btn.addEventListener('click', async () => {
         const target = btn.dataset.view;
+        if (!target) return;
+
+        if (target === 'roles-view' && !canReadRoles()) return;
         showView(target);
+
         if (target === 'users-view') await cargarUsuarios();
+        if (target === 'roles-view') await cargarRoles();
     });
 });
 
@@ -203,6 +288,13 @@ if (taskForm) {
     });
 }
 
+if (usersIdSearch) {
+    usersIdSearch.addEventListener('input', async (e) => {
+        setUsersIdSearch(e.target.value);
+        await aplicarFiltrosUsuariosYRender();
+    });
+}
+
 if (usersSearch) {
     usersSearch.addEventListener('input', async (e) => {
         setUsersSearch(e.target.value);
@@ -229,9 +321,14 @@ if (userForm) {
         const correo = userEmailInput.value.trim();
         const rol = userRolInput.value;
         const documento = userDocumentoInput.value.trim();
+        const password = userPasswordInput?.value?.trim() || '';
 
-        if (userEditingId) await actualizarUsuarioExistente(userEditingId, nombre, correo, documento, rol);
-        else await crearUsuarioNuevo(nombre, correo, documento, rol);
+        if (!userEditingId && !password) {
+            return;
+        }
+
+        if (userEditingId) await actualizarUsuarioExistente(userEditingId, nombre, correo, documento, rol, password);
+        else await crearUsuarioNuevo(nombre, correo, documento, rol, password);
 
         closeUserModal();
     });
@@ -275,6 +372,116 @@ if (deleteUserModal) {
     });
 }
 
+if (rolesIdSearch) {
+    rolesIdSearch.addEventListener('input', async (e) => {
+        setRolesIdSearch(e.target.value);
+        await aplicarFiltrosRolesYRender();
+    });
+}
+
+if (rolesSearch) {
+    rolesSearch.addEventListener('input', async (e) => {
+        setRolesSearch(e.target.value);
+        await aplicarFiltrosRolesYRender();
+    });
+}
+
+function populateRolePermissionsSelect(selected = []) {
+    if (!rolePermissionsInput) return;
+    const allPermissions = getRolePermissionsCatalog();
+    rolePermissionsInput.innerHTML = allPermissions.map((code) => {
+        const isSelected = selected.includes(code) ? 'selected' : '';
+        return `<option value="${code}" ${isSelected}>${code}</option>`;
+    }).join('');
+}
+
+function openRoleModal(role = null) {
+    if (!roleModal || !roleForm) return;
+
+    if (role) {
+        roleEditingId = role.id;
+        roleModalTitle.textContent = 'Editar Rol';
+        roleNameInput.value = role.nombre || '';
+        roleDescriptionInput.value = role.descripcion || '';
+        populateRolePermissionsSelect(role.permissions || []);
+    } else {
+        roleEditingId = null;
+        roleModalTitle.textContent = 'Nuevo Rol';
+        roleForm.reset();
+        populateRolePermissionsSelect([]);
+    }
+
+    roleModal.classList.add('show');
+}
+
+function closeRoleModal() {
+    roleModal?.classList.remove('show');
+    roleEditingId = null;
+    roleForm?.reset();
+    populateRolePermissionsSelect([]);
+}
+
+if (newRoleBtn) newRoleBtn.addEventListener('click', () => openRoleModal());
+if (closeRoleModalBtn) closeRoleModalBtn.addEventListener('click', closeRoleModal);
+
+if (roleModal) {
+    roleModal.addEventListener('click', (e) => {
+        if (e.target === roleModal) closeRoleModal();
+    });
+}
+
+if (roleForm) {
+    roleForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = roleNameInput?.value?.trim();
+        const description = roleDescriptionInput?.value?.trim() || '';
+        const permissions = Array.from(rolePermissionsInput?.selectedOptions || []).map((o) => o.value);
+
+        if (!name) return;
+
+        if (roleEditingId) await actualizarRolExistente(roleEditingId, name, description, permissions);
+        else await crearRolNuevo(name, description, permissions);
+
+        closeRoleModal();
+    });
+}
+
+if (rolesContainer) {
+    rolesContainer.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.role-edit');
+        const deleteBtn = e.target.closest('.role-delete');
+
+        if (editBtn) {
+            const role = await prepararEdicionRol(editBtn.dataset.id);
+            if (role) openRoleModal(role);
+        }
+
+        if (deleteBtn) {
+            prepararEliminacionRol(deleteBtn.dataset.id);
+            deleteRoleModal?.classList.add('show');
+        }
+    });
+}
+
+if (confirmDeleteRoleBtn) {
+    confirmDeleteRoleBtn.addEventListener('click', async () => {
+        await eliminarRolConfirmado();
+        deleteRoleModal?.classList.remove('show');
+    });
+}
+
+if (cancelDeleteRoleBtn) {
+    cancelDeleteRoleBtn.addEventListener('click', () => {
+        deleteRoleModal?.classList.remove('show');
+    });
+}
+
+if (deleteRoleModal) {
+    deleteRoleModal.addEventListener('click', (e) => {
+        if (e.target === deleteRoleModal) deleteRoleModal.classList.remove('show');
+    });
+}
+
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -292,8 +499,10 @@ if (loginForm) {
         try {
             await loginWithCredentials(documentValue, passwordValue);
             showAppView();
-            showView('dashboard-view');
+            applyPermissionBasedUi();
+            showView(getFirstAllowedView());
             await cargarUsuarios();
+            if (canReadRoles()) await cargarRoles();
             if (userSelect?.value) await cargarTareasPorUsuario(userSelect.value);
             loginForm.reset();
         } catch (error) {

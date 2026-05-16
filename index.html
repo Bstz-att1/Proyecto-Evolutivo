@@ -43,6 +43,7 @@
         <button class="nav-link active" data-view="dashboard-view">Dashboard</button>
         <button class="nav-link" data-view="tasks-view">Tareas</button>
         <button class="nav-link" data-view="users-view">Usuarios</button>
+        <button class="nav-link" data-view="roles-view" id="roles-nav-link">Roles</button>
         <button id="logout-btn" class="nav-link">Cerrar sesión</button>
       </nav>
     </aside>
@@ -161,10 +162,12 @@
 
         <div class="panel">
           <div class="users-toolbar">
+            <input type="text" id="users-id-search" class="form-input" placeholder="Buscar por ID de usuario...">
             <input type="text" id="users-search" class="form-input" placeholder="Buscar por nombre o correo...">
             <select id="users-role-filter" class="form-input">
               <option value="">Todos los roles</option>
               <option value="administrador">Administrador</option>
+              <option value="supervisor">Supervisor</option>
               <option value="usuario">Usuario</option>
             </select>
             <button id="new-user-btn" class="btn btn-primary" type="button">Nuevo Usuario</button>
@@ -174,6 +177,24 @@
         <section class="panel">
           <div id="users-skeleton" class="skeleton-table hidden"></div>
           <div id="users-container"></div>
+        </section>
+      </section>
+
+      <section id="roles-view" class="view">
+        <div class="view-header">
+          <h2>Gestión de Roles</h2>
+        </div>
+
+        <div class="panel">
+          <div class="users-toolbar">
+            <input type="text" id="roles-id-search" class="form-input" placeholder="Buscar por ID de rol...">
+            <input type="text" id="roles-search" class="form-input" placeholder="Buscar rol por nombre o descripción...">
+            <button id="new-role-btn" class="btn btn-primary" type="button">Nuevo Rol</button>
+          </div>
+        </div>
+
+        <section class="panel">
+          <div id="roles-container"></div>
         </section>
       </section>
     </main>
@@ -210,14 +231,55 @@
           <label class="form-label" for="user-rol">Rol</label>
           <select id="user-rol" class="form-input">
             <option value="usuario">Usuario</option>
+            <option value="supervisor">Supervisor</option>
             <option value="administrador">Administrador</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="user-password">Contraseña</label>
+          <input id="user-password" class="form-input" type="password" minlength="6" placeholder="Mínimo 6 caracteres" required>
         </div>
         <div class="modal-buttons">
           <button type="submit" class="btn btn-primary">Guardar</button>
           <button type="button" id="close-user-modal" class="btn btn-secondary">Cancelar</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div id="role-modal" class="modal">
+    <div class="modal-content">
+      <h3 class="modal-title" id="role-modal-title">Nuevo Rol</h3>
+      <form id="role-form">
+        <div class="form-group">
+          <label class="form-label" for="role-name">Nombre</label>
+          <input id="role-name" class="form-input" type="text" required placeholder="ADMIN | SUPERVISOR | USER">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="role-description">Descripción</label>
+          <input id="role-description" class="form-input" type="text" placeholder="Descripción del rol">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="role-permissions">Permisos</label>
+          <select id="role-permissions" class="form-input" multiple size="8"></select>
+          <small>Usa Ctrl/Cmd para seleccionar varios permisos.</small>
+        </div>
+        <div class="modal-buttons">
+          <button type="submit" class="btn btn-primary">Guardar</button>
+          <button type="button" id="close-role-modal" class="btn btn-secondary">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="delete-role-modal" class="modal">
+    <div class="modal-content">
+      <h3 class="modal-title">Confirmar Eliminación de Rol</h3>
+      <p class="modal-message">¿Está seguro de que desea eliminar este rol?</p>
+      <div class="modal-buttons">
+        <button type="button" id="confirm-delete-role" class="btn btn-danger">Eliminar</button>
+        <button type="button" id="cancel-delete-role" class="btn btn-secondary">Cancelar</button>
+      </div>
     </div>
   </div>
 

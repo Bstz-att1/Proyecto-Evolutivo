@@ -5,6 +5,25 @@ function extractData(json) {
     return json?.data;
 }
 
+function extractErrorMessage(json, fallback) {
+    return (
+        json?.message ||
+        json?.error ||
+        (Array.isArray(json?.errors) ? json.errors.join(', ') : null) ||
+        fallback
+    );
+}
+
+function normalizeRoleForBackend(role) {
+    const value = String(role || '').trim().toLowerCase();
+
+    if (['administrador', 'admin'].includes(value)) return 'ADMIN';
+    if (['supervisor'].includes(value)) return 'SUPERVISOR';
+    if (['usuario', 'user'].includes(value)) return 'USER';
+
+    return 'USER';
+}
+
 // ======================================================================
 //                             METHOD | GET
 // ======================================================================
@@ -50,9 +69,14 @@ export async function userGetById(id) {
  * @param {string} role - Rol del usuario (administrador | usuario).
  * @returns {Promise<Object>} - El usuario creado.
  */
-export async function userPost(name, email, document, role) {
-    const normalizedRole = role === 'administrador' ? 'admin' : role === 'usuario' ? 'user' : role;
-    const payload = { name, email, document, role: normalizedRole };
+export async function userPost(name, email, document, password, role) {
+    const payload = {
+        name,
+        email,
+        document,
+        password,
+        role: normalizeRoleForBackend(role)
+    };
 
     const response = await authFetch(`${API_URL}/users`, {
         method: 'POST',
@@ -62,14 +86,24 @@ export async function userPost(name, email, document, role) {
         body: JSON.stringify(payload)
     });
 
-    const json = await response.json();
-
-    if (!response.ok) {
-        throw new Error(json?.message || 'Error al crear el usuario');
+    let json = {};
+    try {
+        json = await response.json();
+    } catch (_) {
+        json = {};
     }
 
-    const data = extractData(json) || {};
-    const insertId = data.insertId ?? data.id;
+    if (!response.ok) {
+        throw new Error(extractErrorMessage(json, 'Error al crear el usuario'));
+    }
+
+    const data = extractData(json);
+
+    if (data && !Array.isArray(data) && typeof data === 'object') {
+        return data;
+    }
+
+    const insertId = data?.insertId ?? data?.id ?? json?.insertId ?? json?.id;
 
     return {
         id: insertId != null ? String(insertId) : undefined,
@@ -89,9 +123,14 @@ export async function userPost(name, email, document, role) {
  * @param {string} role - Rol del usuario.
  * @returns {Promise<Object>} - Usuario actualizado.
  */
-export async function userPut(id, name, email, document, role) {
-    const normalizedRole = role === 'administrador' ? 'admin' : role === 'usuario' ? 'user' : role;
-    const payload = { name, email, document, role: normalizedRole };
+export async function userPut(id, name, email, document, password, role) {
+    const payload = {
+        name,
+        email,
+        document,
+        password,
+        role: normalizeRoleForBackend(role)
+    };
 
     const response = await authFetch(`${API_URL}/users/${id}`, {
         method: 'PUT',
@@ -101,10 +140,15 @@ export async function userPut(id, name, email, document, role) {
         body: JSON.stringify(payload)
     });
 
-    const json = await response.json();
+    let json = {};
+    try {
+        json = await response.json();
+    } catch (_) {
+        json = {};
+    }
 
     if (!response.ok) {
-        throw new Error(json?.message || 'Error al reemplazar el usuario');
+        throw new Error(extractErrorMessage(json, 'Error al reemplazar el usuario'));
     }
 
     const data = extractData(json);
@@ -138,10 +182,15 @@ export async function userPatch(id, changes = {}) {
         body: JSON.stringify(changes)
     });
 
-    const json = await response.json();
+    let json = {};
+    try {
+        json = await response.json();
+    } catch (_) {
+        json = {};
+    }
 
     if (!response.ok) {
-        throw new Error(json?.message || 'Error al actualizar parcialmente el usuario');
+        throw new Error(extractErrorMessage(json, 'Error al actualizar parcialmente el usuario'));
     }
 
     const data = extractData(json);
