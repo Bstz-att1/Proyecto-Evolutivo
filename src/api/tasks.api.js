@@ -58,16 +58,19 @@ export async function taskGetByUser(userId) {
  * @param {string} descripcion - Detalle extenso de la actividad.
  * @param {string} status - Estado inicial (pendiente, en progreso, completada).
  * @param {number|string} userId - ID del usuario dueño de la tarea.
- * @param {string} created_by - Rol de quien crea la tarea (administrador | usuario).
+ * @param {string} created_by - Rol de quien crea la tarea (ADMIN | SUPERVISOR0 | USER).
  * @returns {Promise<Object>} - La tarea creada devuelta por el servidor.
  */
 export async function taskPost(titulo, descripcion, status, userId, created_by) {
+    const parsedUserId = Number(userId);
+    const normalizedCreatedBy = String(created_by || 'USER').trim().toUpperCase();
+
     const payload = {
         title: titulo,
         description: descripcion,
         status: status || 'pendiente',
-        user_id: userId != null && userId !== '' ? Number(userId) : null,
-        created_by: created_by || 'user'
+        user_id: Number.isFinite(parsedUserId) ? parsedUserId : userId,
+        created_by: ['ADMIN', 'SUPERVISOR', 'USER'].includes(normalizedCreatedBy) ? normalizedCreatedBy : 'USER'
     };
 
     const response = await authFetch(`${API_URL}/tasks`, {
@@ -78,10 +81,19 @@ export async function taskPost(titulo, descripcion, status, userId, created_by) 
         body: JSON.stringify(payload)
     });
 
-    const json = await response.json();
+    let json = {};
+    try {
+        json = await response.json();
+    } catch (_) {
+        json = {};
+    }
 
     if (!response.ok) {
-        throw new Error(json?.message || "Error al crear la tarea");
+        const backendError =
+            json?.message ||
+            json?.error ||
+            (Array.isArray(json?.errors) ? json.errors.join(', ') : null);
+        throw new Error(backendError || "Error al crear la tarea");
     }
 
     const data = extractData(json);
@@ -90,7 +102,7 @@ export async function taskPost(titulo, descripcion, status, userId, created_by) 
         return data;
     }
 
-    const insertId = data?.insertId ?? data?.id;
+    const insertId = data?.insertId ?? data?.id ?? json?.insertId ?? json?.id;
 
     return {
         id: insertId != null ? String(insertId) : '',
