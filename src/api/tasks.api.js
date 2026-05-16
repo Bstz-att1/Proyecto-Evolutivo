@@ -1,4 +1,5 @@
 import { API_URL } from '../core/config.js';
+import { authFetch } from './httpClient.js';
 
 function extractData(json) {
     return json?.data;
@@ -12,7 +13,7 @@ function extractData(json) {
  * @returns {Promise<Array>} - Un arreglo con todos los objetos de tareas.
  */
 export async function taskGet() {
-    const response = await fetch(`${API_URL}/tasks`);
+    const response = await authFetch(`${API_URL}/tasks`);
 
     if (!response.ok) {
         throw new Error("Error al obtener tareas");
@@ -69,7 +70,7 @@ export async function taskPost(titulo, descripcion, status, userId, created_by) 
         created_by: created_by || 'user'
     };
 
-    const response = await fetch(`${API_URL}/tasks`, {
+    const response = await authFetch(`${API_URL}/tasks`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -120,7 +121,7 @@ export async function taskPut(id, titulo, descripcion, status, userId, created_b
         created_by: created_by || 'user'
     };
 
-    const response = await fetch(`${API_URL}/tasks/${id}`, {
+    const response = await authFetch(`${API_URL}/tasks/${id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -167,7 +168,7 @@ export async function taskPatch(id, titulo, descripcion, status, userId) {
         user_id: userId != null && userId !== '' ? Number(userId) : null
     };
 
-    const response = await fetch(`${API_URL}/tasks/${id}`, {
+    const response = await authFetch(`${API_URL}/tasks/${id}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'
@@ -202,7 +203,7 @@ export async function taskPatch(id, titulo, descripcion, status, userId) {
  * @returns {Promise<boolean>} - True si la operación fue exitosa.
  */
 export async function taskDelete(id) {
-    const response = await fetch(`${API_URL}/tasks/${id}`, {
+    const response = await authFetch(`${API_URL}/tasks/${id}`, {
         method: "DELETE",
         headers: {
             'Content-Type': 'application/json'

@@ -1,4 +1,5 @@
 import { API_URL } from '../core/config.js';
+import { authFetch } from './httpClient.js';
 
 function extractData(json) {
     return json?.data;
@@ -12,7 +13,7 @@ function extractData(json) {
  * @returns {Promise<Array>} - Un arreglo con todos los usuarios.
  */
 export async function userGet() {
-    const response = await fetch(`${API_URL}/users`);
+    const response = await authFetch(`${API_URL}/users`);
 
     if (!response.ok) {
         throw new Error('Error al obtener usuarios');
@@ -28,7 +29,7 @@ export async function userGet() {
  * @returns {Promise<Object>} - Objeto usuario encontrado.
  */
 export async function userGetById(id) {
-    const response = await fetch(`${API_URL}/users/${id}`);
+    const response = await authFetch(`${API_URL}/users/${id}`);
 
     if (!response.ok) {
         throw new Error('Error al obtener el usuario');
@@ -53,7 +54,7 @@ export async function userPost(name, email, document, role) {
     const normalizedRole = role === 'administrador' ? 'admin' : role === 'usuario' ? 'user' : role;
     const payload = { name, email, document, role: normalizedRole };
 
-    const response = await fetch(`${API_URL}/users`, {
+    const response = await authFetch(`${API_URL}/users`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -92,7 +93,7 @@ export async function userPut(id, name, email, document, role) {
     const normalizedRole = role === 'administrador' ? 'admin' : role === 'usuario' ? 'user' : role;
     const payload = { name, email, document, role: normalizedRole };
 
-    const response = await fetch(`${API_URL}/users/${id}`, {
+    const response = await authFetch(`${API_URL}/users/${id}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -129,7 +130,7 @@ export async function userPut(id, name, email, document, role) {
  * @returns {Promise<Object>} - Usuario actualizado.
  */
 export async function userPatch(id, changes = {}) {
-    const response = await fetch(`${API_URL}/users/${id}`, {
+    const response = await authFetch(`${API_URL}/users/${id}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json'
@@ -165,7 +166,7 @@ export async function userPatch(id, changes = {}) {
  * @returns {Promise<boolean>} - True si la operación fue exitosa.
  */
 export async function userDelete(id) {
-    const response = await fetch(`${API_URL}/users/${id}`, {
+    const response = await authFetch(`${API_URL}/users/${id}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json'
