@@ -382,4 +382,11 @@ En `package.json`:
 
 ---
 
+## 13. Documentación adicional
+
+- [`docs/DOCUMENTATION.md`](./docs/DOCUMENTATION.md) → Mapa rápido de archivos, funciones clave y parámetros de cada módulo frontend.
+- [`docs/changelog.md`](./docs/changelog.md) → Historial de cambios del frontend.
+
+---
+
 Documentación actualizada para reflejar el estado real del frontend actual y optimizada para visibilidad en GitHub desde la raíz del repositorio.
