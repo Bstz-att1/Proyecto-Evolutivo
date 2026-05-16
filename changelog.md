@@ -614,3 +614,112 @@ Se completó la integración visual y de comportamiento para login/logout y expi
 - Se agregó renovación automática de access token sin pedir login inmediato.
 - Se garantiza que solo se solicita re-login cuando el refresh token expira o es inválido/revocado.
 - Se centralizó la lógica de sesión y transporte autenticado para reducir duplicidad y facilitar mantenimiento.
+
+---
+
+## Actualización - Reorganización y rediseño visual de la sección de Tareas
+
+### 27) `index.html` (reordenamiento estructural de `tasks-view`)
+Se reorganizó la vista de tareas para priorizar el flujo solicitado: primero creación, luego búsqueda/filtrado y finalmente listado.
+
+**Cambios:**
+- Se movió el formulario `#task-form` al inicio de la sección de tareas.
+- Se añadió encabezado descriptivo al panel de creación:
+  - título: **Crear tarea**
+  - texto de apoyo para guiar al usuario.
+- Se separó la búsqueda/filtrado en su propio panel (`task-filter-panel`) con encabezado:
+  - título: **Buscar y filtrar tareas**
+  - descripción de uso.
+- Se mantuvieron todos los IDs funcionales existentes para evitar regresiones JS:
+  - `#user-select`, `#estado-filter`, `#titulo-filter`, `#sort-by`, `#sort-dir`, `#refresh-btn`.
+- Se actualizó encabezado de listado:
+  - **Listado de tareas** + descripción.
+- Se incorporó contenedor de acciones para el listado:
+  - `#task-list-actions`.
+
+**Resultado:**
+- Flujo de uso más profesional y claro en la gestión de tareas (crear -> filtrar -> gestionar listado).
+
+---
+
+### 28) `src/script.js` (ajuste de ubicación de acción de exportación)
+Se actualizó la inserción del botón de exportación para alinearlo con la nueva composición visual del listado.
+
+**Cambios:**
+- El botón dinámico `📥 Exportar JSON` ahora se inserta en `#task-list-actions`.
+- Se dejó fallback compatible:
+  - si `#task-list-actions` no existe, el botón se inserta como antes encima de `.tasks-container`.
+- Se preservó el comportamiento original de exportación (`exportarTareas()`).
+
+**Resultado:**
+- Acciones del listado agrupadas en un área dedicada, mejorando orden visual sin alterar funcionalidades existentes.
+
+---
+
+### 29) `styles.css` (mejora integral de presentación y orden visual en tareas)
+Se aplicó una segunda capa de refinamiento visual para resolver desorden de espaciado, separación de botones y control de campos.
+
+**Cambios de diseño/espaciado:**
+- Paneles con mayor aire visual:
+  - `padding` aumentado.
+  - sombras más definidas y profesionales.
+- Encabezados de panel (`.panel-head`) para jerarquía clara.
+- Nuevos estilos de paneles de tareas:
+  - `.task-create-panel`
+  - `.task-filter-panel`
+  - `.task-list-panel`.
+
+**Cambios en formularios y campos:**
+- Etiquetas (`.form-label`) con mejor separación.
+- Inputs/textarea con:
+  - `min-height` uniforme,
+  - `hover` y `focus` más consistentes,
+  - transición suave visual.
+- `textarea` con `resize: vertical` y altura mínima, para evitar desorden.
+
+**Cambios en botones y acciones:**
+- Botones (`.btn`) más consistentes:
+  - altura mínima,
+  - padding uniforme,
+  - efectos `hover`/`active`.
+- Barras de acciones mejor separadas:
+  - `.task-filter-actions` con divisor superior.
+  - `.task-list-actions` con divisor inferior y espaciado reforzado.
+- Mejor distribución de botones en tarjetas y barras (`gap` y `flex-wrap`).
+
+**Cambios en listado de tareas:**
+- Tarjetas (`.task-card`) con mejor legibilidad:
+  - contraste refinado,
+  - espaciado interno superior,
+  - metadatos con separación visual (`border-top` punteado).
+- Contenedor de tarjetas con `gap` y ancho mínimo más equilibrado.
+
+**Responsive:**
+- Ajustes para `<=1024px` y `<=640px`:
+  - grids colapsan progresivamente.
+  - acciones y botones pasan a ancho completo en móvil.
+  - menor riesgo de amontonamiento visual.
+
+**Resultado:**
+- Interfaz de tareas más limpia, profesional y estable visualmente en desktop y móvil.
+
+---
+
+**Cambios:**
+- Registro de tareas de:
+  - reordenamiento HTML,
+  - mejora CSS,
+  - ajuste en script.
+- Marcado de ítems como completados al finalizar.
+
+**Resultado:**
+- Trazabilidad clara del trabajo aplicado durante la mejora de UX/UI de tareas.
+
+---
+
+## Resumen de impacto Frontend (reorganización visual de tareas)
+- Se priorizó el flujo de trabajo solicitado: **crear tarea** primero, luego **filtrar/buscar**, luego **listado**.
+- Se mejoró notablemente la organización visual y separación de acciones.
+- Se redujo el desorden en campos editables y distribución de botones.
+- Se mantuvo compatibilidad funcional al conservar IDs y eventos existentes.
+- Se reforzó la experiencia responsive para evitar desalineaciones en resoluciones menores.
